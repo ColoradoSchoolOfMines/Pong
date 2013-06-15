@@ -202,7 +202,6 @@ public class Pong extends ProcessingModule {
 				if (!leftPlayerConnected) {
 					type = EventType.HAND_CREATED;
 				}
-				System.out.println("Left player connected");
 				EventManager.getInstance().fireEvent(type,
 						new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
 			} else if (mouseButton == RIGHT) {
@@ -210,16 +209,21 @@ public class Pong extends ProcessingModule {
 				if (!rightPlayerConnected) {
 					type = EventType.HAND_CREATED;
 				}
-				System.out.println("Right Player connected");
 				EventManager.getInstance().fireEvent(type,
 						new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
 			}
 		}
 	}
 	
-	public void mouseMoved() {
+	public void mousePressed() {
 		if (DEBUG_HANDS && gameState == STATE_PLAYING) {
-			
+			if (mouseButton == LEFT) {
+				EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
+						new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
+			} else if (mouseButton == RIGHT) {
+				EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
+						new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
+			}
 		}
 	}
 	

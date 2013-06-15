@@ -20,7 +20,8 @@ public class Paddle {
 		return this.y;
 	}
 	
-	public void addY(int val) {
-		this.y += val;
+	public void setY(int val) {
+		this.y = val;
+		
 	}
 }
