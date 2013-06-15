@@ -1,5 +1,6 @@
 package edu.mines.aakash.modules;
 
+import processing.core.PApplet;
 import edu.mines.aakash.modules.input.MyHandReceiver;
 import edu.mines.aakash.modules.players.HumanPlayer;
 import edu.mines.aakash.modules.players.Player;
@@ -98,6 +99,7 @@ public class Pong extends ProcessingModule {
 		
 		if (gameState == STATE_PLAYING) {
 			
+			checkBallPosition();
 			
 			// Update ball location
 			ball.update();
@@ -140,6 +142,13 @@ public class Pong extends ProcessingModule {
 						3 * screenWidth / 4,
 						screenHeight / 2);
 			}
+		} else if (gameState == STATE_PLAYING) {
+			// Draw score
+			stroke(255);
+			fill(255);
+			text(PApplet.nfs(leftPoints, 2) + "", 20, 20);
+			text(PApplet.nfs(rightPoints, 2), screenWidth - 20, 20);
+			
 		}
 	}
 	
@@ -147,6 +156,8 @@ public class Pong extends ProcessingModule {
 		ball.setInitialVelocity(initialVelocityX, 4);
 		leftPlayer = new HumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID());
 		rightPlayer = new HumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID());
+		
+		leftPoints = rightPoints = 0;
 		
 		gameState = STATE_PLAYING;
 	}
@@ -164,6 +175,7 @@ public class Pong extends ProcessingModule {
 	public void checkBallPosition() {
 		int ballX = ball.getX();
 		int ballY = ball.getY();
+		
 		// Check ball position against top wall
 		if (ballY < Ball.BALL_RADIUS) {
 			ball.setY(Ball.BALL_RADIUS);
@@ -174,17 +186,19 @@ public class Pong extends ProcessingModule {
 		}
 
 		// Check for ball collision against left paddle
-		checkBallCollisionOnPaddle(leftPaddle);
-		checkBallCollisionOnPaddle(rightPaddle);
+		checkBallCollisionOnLeftPaddle();
+		checkBallCollisionOnRightPaddle();
 		
 		// Check if the ball is past the paddle
 		boolean pointScored = false;
-		if (ballX < Paddle.PADDLE_WIDTH) {
+		if (ballX < leftPaddle.getX()) {
 			// Player 2 scored a point
+			System.out.println("Player 2 scores a point");
 			rightPoints++;
 			pointScored = true;
 		} else if (ballX > (screenWidth - Paddle.PADDLE_WIDTH)) {
 			// Player 1 scored a point
+			System.out.println("Player 1 scores a point");
 			leftPoints++;
 			pointScored = true;
 		}
@@ -198,12 +212,24 @@ public class Pong extends ProcessingModule {
 		}
 	}
 	
-	public void checkBallCollisionOnPaddle(Paddle paddle) {
+	public void checkBallCollisionOnLeftPaddle() {
 		int ballX = ball.getX();
 		int ballY = ball.getY();
 		
-		if (ballY > paddle.getY() && ballY < (paddle.getY() + Paddle.PADDLE_HEIGHT)) {
-			if (Math.abs((ballX - paddle.getX())) < Ball.BALL_RADIUS) {
+		if (ballY > leftPaddle.getY() && ballY < (leftPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
+			if (Math.abs((ballX - leftPaddle.getX() - Paddle.PADDLE_WIDTH)) < Ball.BALL_RADIUS) {
+				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH + Ball.BALL_RADIUS);
+				ball.reverseVelocityX();
+			}
+		}
+	}
+	
+	public void checkBallCollisionOnRightPaddle() {
+		int ballX = ball.getX();
+		int ballY = ball.getY();
+		if (ballY > rightPaddle.getY() && ballY < (rightPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
+			if (Math.abs((ballX - rightPaddle.getX())) < Ball.BALL_RADIUS) {
+				ball.setX(rightPaddle.getX() - Ball.BALL_RADIUS);
 				ball.reverseVelocityX();
 			}
 		}
