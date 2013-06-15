@@ -8,16 +8,20 @@ public class Ball {
 	private int velX;
 	private int velY;
 	
-	public Ball(int x, int y, int velocityX, int velocityY) {
+	public Ball(int x, int y) {
 		this.x = x;
 		this.y = y;
-		this.velX = velocityX;
-		this.velY = velocityY;
+		
 	}
 	
 	public void update() {
 		this.x += velX;
 		this.y += velY;
+	}
+	
+	public void setInitialVelocity(int velocityX, int velocityY) {
+		this.velX = velocityX;
+		this.velY = velocityY;
 	}
 	
 	public void setX(int val) {

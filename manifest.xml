@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest
-    package="com.austindiviness.test"
-    class="LaunchModule" >
+    package="edu.mines.aakash.modules"
+    class="Pong"
+    icon="icon.png"
+    title="Pong"
+    author="Aakash Shah"
+    version="0.0.1" >
     <uses-sdk
         minSdkVersion="0"
         targetSdkVersion="0" />
-    <module
-        icon="icon.png"
-        title="Fractal Generator"
-        author="James Noeckel"
-        version="1" >
-        <inputs>
-            <input input-type="handtracking" />
-        </inputs>
-        <requires-module>
-            
-        </requires-module>
-    </module>
+        
+    <inputs>
+        <input input-type="handtracking" />
+    </inputs>
+    <requires-module>
+        
+    </requires-module>
 </manifest>

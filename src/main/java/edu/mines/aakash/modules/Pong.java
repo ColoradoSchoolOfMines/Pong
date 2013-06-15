@@ -1,9 +1,10 @@
 package edu.mines.aakash.modules;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
+import edu.mines.aakash.modules.input.MyHandReceiver;
+import edu.mines.aakash.modules.players.HumanPlayer;
+import edu.mines.aakash.modules.players.Player;
+import edu.mines.acmX.exhibit.input_services.events.EventManager;
+import edu.mines.acmX.exhibit.input_services.events.EventType;
 import edu.mines.acmX.exhibit.input_services.hardware.BadFunctionalityRequestException;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManager;
 import edu.mines.acmX.exhibit.input_services.hardware.HardwareManagerManifestException;
@@ -13,7 +14,6 @@ import edu.mines.acmX.exhibit.input_services.hardware.drivers.InvalidConfigurati
 import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
 import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
-import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
 
 /**
  * Hello world!
@@ -24,6 +24,7 @@ public class Pong extends ProcessingModule {
 	public static final int STATE_WAITING = 0;
 	public static final int STATE_PLAYING = 1;
 	public static final int POINTS_OVER = 5;
+	public static final boolean DEBUG_HANDS = true;
 	
 	private int gameState;
 	
@@ -59,7 +60,7 @@ public class Pong extends ProcessingModule {
 		initialVelocityX = (int) (screenWidth / 5 / frameRate); 
 		
 		// Create ball and paddle
-		ball = new Ball(screenWidth / 2, screenHeight / 2, 0, 0);
+		ball = new Ball(screenWidth / 2, screenHeight / 2);
 		leftPaddle = new Paddle(0, (screenHeight - Paddle.PADDLE_HEIGHT) / 2);
 		rightPaddle = new Paddle(screenWidth - Paddle.PADDLE_WIDTH,
 								(screenHeight - Paddle.PADDLE_HEIGHT) / 2);
@@ -72,7 +73,7 @@ public class Pong extends ProcessingModule {
 		try {
 			 hm = HardwareManager.getInstance();
 			 handDriver = (HandTrackerInterface) hm.getInitialDriver("handtracking");
-			 receiver = new MyHandReceiver();
+			 receiver = new MyHandReceiver(this);
 			 
 			 handDriver.registerHandCreated(receiver);
 			 handDriver.registerHandUpdated(receiver);
@@ -119,8 +120,10 @@ public class Pong extends ProcessingModule {
 			if (pointScored) {
 				if (leftPoints > POINTS_OVER || rightPoints > POINTS_OVER) {
 					// TODO Start new game, wait for new players to join
+					
 				} else {
 					// TODO Reset ball
+					resetBall();
 				}
 			}
 			
@@ -153,6 +156,30 @@ public class Pong extends ProcessingModule {
 		}
 	}
 	
+	public void initGame() {
+		ball.setInitialVelocity(initialVelocityX, 4);
+		leftPlayer = new HumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID());
+		rightPlayer = new HumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID());
+		
+		gameState = STATE_PLAYING;
+	}
+	
+	public void endGame() {
+		// reset ball
+		ball.setX(screenWidth / 2);
+		ball.setY(screenHeight / 2);
+		ball.setInitialVelocity(0, 0);
+		
+		leftPlayer = null;
+		rightPlayer = null;
+	}
+	
+	public void resetBall() {
+		ball.setX(screenWidth / 2);
+		ball.setY(screenHeight / 2);
+		ball.setInitialVelocity(initialVelocityX, 4);
+	}
+	
 	public void drawPaddle(Paddle paddle) {
 		stroke(255);
 		fill(255);
@@ -168,56 +195,47 @@ public class Pong extends ProcessingModule {
 		ellipse(ball.getX(), ball.getY(), Ball.BALL_RADIUS, Ball.BALL_RADIUS);
 	}
 	
-	class MyHandReceiver extends HandReceiver {
-		
-		private int leftHandID;
-		private Coordinate3D leftPosition;
-		
-		private int rightHandID;
-		private Coordinate3D rightPosition;
-		
-		public MyHandReceiver() {
-			leftHandID = -1;
-			rightHandID = -1;
-		}
-		
-		public void handCreated(HandPosition handPos) {
-			if (!leftPlayerConnected) {
-				leftHandID = handPos.getId();
-				leftPosition = handPos.getPosition();
-				
-				leftPlayerConnected = true;
-			} else if (!rightPlayerConnected) {
-				rightHandID = handPos.getId();
-				rightPosition = handPos.getPosition();
-				
-				rightPlayerConnected = true;
+	public void mouseReleased() {
+		if (DEBUG_HANDS) {
+			if (mouseButton == LEFT) {
+				EventType type = EventType.HAND_UPDATED;
+				if (!leftPlayerConnected) {
+					type = EventType.HAND_CREATED;
+				}
+				System.out.println("Left player connected");
+				EventManager.getInstance().fireEvent(type,
+						new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
+			} else if (mouseButton == RIGHT) {
+				EventType type = EventType.HAND_UPDATED;
+				if (!rightPlayerConnected) {
+					type = EventType.HAND_CREATED;
+				}
+				System.out.println("Right Player connected");
+				EventManager.getInstance().fireEvent(type,
+						new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
 			}
 		}
-		
-		public void handUpdated(HandPosition handPos) {
-			if (handPos.getId() == leftHandID) {
-				leftPosition = handPos.getPosition();
-			} else if (handPos.getId() == rightHandID) {
-				rightPosition = handPos.getPosition();
-			}
+	}
+	
+	public void mouseMoved() {
+		if (DEBUG_HANDS && gameState == STATE_PLAYING) {
+			
 		}
-		
-		public void handDestroyed(int id) {
-			// TODO handle when a player disconnects
-			if (id == leftHandID) {
-				leftPlayerConnected = false;
-			} else if (id == rightHandID) {
-				rightPlayerConnected = false;
-			}
-		}
-		
-		public Coordinate3D getLeftHandPosition() {
-			return leftPosition;
-		}
-		
-		public Coordinate3D getRightHandPosition() {
-			return rightPosition;
-		}
+	}
+	
+	public boolean isLeftPlayerConnected() {
+		return leftPlayerConnected;
+	}
+	
+	public boolean isRightPlayerConnected() {
+		return rightPlayerConnected;
+	}
+	
+	public void leftPlayerConnected(boolean val) {
+		leftPlayerConnected = val;
+	}
+	
+	public void rightPlayerConnected(boolean val) {
+		rightPlayerConnected = val;
 	}
 }
