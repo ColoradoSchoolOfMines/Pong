@@ -161,6 +161,7 @@ public class Pong extends ProcessingModule {
 		leftPlayer = new HumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID());
 		rightPlayer = new HumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID());
 		
+		lastPoint = 1;
 		leftPoints = rightPoints = 0;
 		
 		gameState = STATE_PLAYING;
