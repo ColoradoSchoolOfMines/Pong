@@ -153,6 +153,21 @@ public class Pong extends ProcessingModule {
 		
 		if (gameState == STATE_WAITING) {
 			// TODO Draw welcome text
+			if (!leftPlayerConnected) {
+				stroke(255);
+				fill(255);
+				text("Waiting for left player to join",
+						screenWidth / 4,
+						screenHeight / 2);
+			}
+			
+			if (!rightPlayerConnected) {
+				stroke(255);
+				fill(255);
+				text("Waiting for right player to join",
+						3 * screenWidth / 4,
+						screenHeight / 2);
+			}
 		}
 	}
 	
@@ -215,7 +230,7 @@ public class Pong extends ProcessingModule {
 		}
 	}
 	
-	public void mousePressed() {
+	public void mouseMoved() {
 		if (DEBUG_HANDS && gameState == STATE_PLAYING) {
 			if (mouseButton == LEFT) {
 				EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,

@@ -10,11 +10,14 @@ public class HumanPlayer extends Player {
 	
 	public HumanPlayer(Paddle paddle, Ball ball, MyHandReceiver receiver, int handID) {
 		super(paddle, ball);
+		this.receiver = receiver;
+		this.handID = handID;
 	}
 
 	@Override
 	public void updatePaddlePosition() {
-		myPaddle.setY((int) receiver.getHandPosition(handID).getY());
+		int newPosition = (int) receiver.getHandPosition(handID).getY(); 
+		myPaddle.setY(newPosition);
 	}
 
 }
