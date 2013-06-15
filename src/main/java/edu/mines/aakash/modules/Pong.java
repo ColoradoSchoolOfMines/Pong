@@ -170,30 +170,54 @@ public class Pong extends ProcessingModule {
 	
 	class MyHandReceiver extends HandReceiver {
 		
-		private Map<Integer, Coordinate3D> handPositions;
+		private int leftHandID;
+		private Coordinate3D leftPosition;
+		
+		private int rightHandID;
+		private Coordinate3D rightPosition;
 		
 		public MyHandReceiver() {
-			handPositions = new HashMap<Integer, Coordinate3D>();
+			leftHandID = -1;
+			rightHandID = -1;
 		}
 		
 		public void handCreated(HandPosition handPos) {
-			handPositions.put(handPos.getId(), handPos.getPosition());
+			if (!leftPlayerConnected) {
+				leftHandID = handPos.getId();
+				leftPosition = handPos.getPosition();
+				
+				leftPlayerConnected = true;
+			} else if (!rightPlayerConnected) {
+				rightHandID = handPos.getId();
+				rightPosition = handPos.getPosition();
+				
+				rightPlayerConnected = true;
+			}
 		}
 		
 		public void handUpdated(HandPosition handPos) {
-			handPositions.put(handPos.getId(), handPos.getPosition());
+			if (handPos.getId() == leftHandID) {
+				leftPosition = handPos.getPosition();
+			} else if (handPos.getId() == rightHandID) {
+				rightPosition = handPos.getPosition();
+			}
 		}
 		
 		public void handDestroyed(int id) {
-			handPositions.remove(id);
+			// TODO handle when a player disconnects
+			if (id == leftHandID) {
+				leftPlayerConnected = false;
+			} else if (id == rightHandID) {
+				rightPlayerConnected = false;
+			}
 		}
 		
-		public Set<Integer> getHandIDs() {
-			return handPositions.keySet();
+		public Coordinate3D getLeftHandPosition() {
+			return leftPosition;
 		}
 		
-		public Coordinate3D getHandPosition(int id) {
-			return handPositions.get(id);
+		public Coordinate3D getRightHandPosition() {
+			return rightPosition;
 		}
 	}
 }
