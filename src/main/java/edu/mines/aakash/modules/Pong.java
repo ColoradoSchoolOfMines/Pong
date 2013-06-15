@@ -24,6 +24,8 @@ public class Pong extends ProcessingModule {
 	
 	public static final int STATE_WAITING = 0;
 	public static final int STATE_PLAYING = 1;
+	public static final int STATE_OVER = 2;
+	
 	public static final int POINTS_OVER = 5;
 	public static final boolean DEBUG_HANDS = true;
 	
@@ -44,6 +46,8 @@ public class Pong extends ProcessingModule {
 	
 	private int initialVelocityX;
 	
+	// 0 - left, 1 - right
+	private int lastPoint;
 	private int leftPoints;
 	private int rightPoints;
 	
@@ -163,13 +167,14 @@ public class Pong extends ProcessingModule {
 	}
 	
 	public void endGame() {
-		exit();
+		gameState = STATE_OVER;
 	}
 	
 	public void resetBall() {
 		ball.setX(screenWidth / 2);
 		ball.setY(screenHeight / 2);
-		ball.setInitialVelocity(initialVelocityX, 4);
+		int direction = lastPoint == 0 ? -1 : 1;
+		ball.setInitialVelocity(direction * initialVelocityX, 4);
 	}
 	
 	public void checkBallPosition() {
@@ -195,17 +200,19 @@ public class Pong extends ProcessingModule {
 			// Player 2 scored a point
 			System.out.println("Player 2 scores a point");
 			rightPoints++;
+			lastPoint = 1;
 			pointScored = true;
 		} else if (ballX > (screenWidth - Paddle.PADDLE_WIDTH)) {
 			// Player 1 scored a point
 			System.out.println("Player 1 scores a point");
+			lastPoint = 0;
 			leftPoints++;
 			pointScored = true;
 		}
 
 		if (pointScored) {
-			if (leftPoints > POINTS_OVER || rightPoints > POINTS_OVER) {
-				initGame();
+			if (leftPoints == POINTS_OVER || rightPoints == POINTS_OVER) {
+				endGame();
 			} else {
 				resetBall();
 			}
