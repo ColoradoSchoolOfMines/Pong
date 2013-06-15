@@ -97,35 +97,7 @@ public class Pong extends ProcessingModule {
 	public void update() {
 		
 		if (gameState == STATE_PLAYING) {
-			// Check ball position
-			if (ball.getY() < Ball.BALL_RADIUS) {
-				ball.setY(Ball.BALL_RADIUS);
-				ball.reverseVelocityY();
-			} else if (ball.getY() > (screenHeight - Ball.BALL_RADIUS)) {
-				ball.setY(screenHeight - Ball.BALL_RADIUS);
-				ball.reverseVelocityY();
-			}
 			
-			boolean pointScored = false;
-			if (ball.getX() < Paddle.PADDLE_WIDTH) {
-				// Player 2 scored a point
-				rightPoints++;
-				pointScored = true;
-			} else if (ball.getX() > (screenWidth - Paddle.PADDLE_WIDTH)) {
-				// Player 1 scored a point
-				leftPoints++;
-				pointScored = true;
-			}
-			
-			if (pointScored) {
-				if (leftPoints > POINTS_OVER || rightPoints > POINTS_OVER) {
-					// TODO Start new game, wait for new players to join
-					
-				} else {
-					// TODO Reset ball
-					resetBall();
-				}
-			}
 			
 			// Update ball location
 			ball.update();
@@ -180,19 +152,61 @@ public class Pong extends ProcessingModule {
 	}
 	
 	public void endGame() {
-		// reset ball
-		ball.setX(screenWidth / 2);
-		ball.setY(screenHeight / 2);
-		ball.setInitialVelocity(0, 0);
-		
-		leftPlayer = null;
-		rightPlayer = null;
+		exit();
 	}
 	
 	public void resetBall() {
 		ball.setX(screenWidth / 2);
 		ball.setY(screenHeight / 2);
 		ball.setInitialVelocity(initialVelocityX, 4);
+	}
+	
+	public void checkBallPosition() {
+		int ballX = ball.getX();
+		int ballY = ball.getY();
+		// Check ball position against top wall
+		if (ballY < Ball.BALL_RADIUS) {
+			ball.setY(Ball.BALL_RADIUS);
+			ball.reverseVelocityY();
+		} else if (ballY > (screenHeight - Ball.BALL_RADIUS)) {
+			ball.setY(screenHeight - Ball.BALL_RADIUS);
+			ball.reverseVelocityY();
+		}
+
+		// Check for ball collision against left paddle
+		checkBallCollisionOnPaddle(leftPaddle);
+		checkBallCollisionOnPaddle(rightPaddle);
+		
+		// Check if the ball is past the paddle
+		boolean pointScored = false;
+		if (ballX < Paddle.PADDLE_WIDTH) {
+			// Player 2 scored a point
+			rightPoints++;
+			pointScored = true;
+		} else if (ballX > (screenWidth - Paddle.PADDLE_WIDTH)) {
+			// Player 1 scored a point
+			leftPoints++;
+			pointScored = true;
+		}
+
+		if (pointScored) {
+			if (leftPoints > POINTS_OVER || rightPoints > POINTS_OVER) {
+				initGame();
+			} else {
+				resetBall();
+			}
+		}
+	}
+	
+	public void checkBallCollisionOnPaddle(Paddle paddle) {
+		int ballX = ball.getX();
+		int ballY = ball.getY();
+		
+		if (ballY > paddle.getY() && ballY < (paddle.getY() + Paddle.PADDLE_HEIGHT)) {
+			if (Math.abs((ballX - paddle.getX())) < Ball.BALL_RADIUS) {
+				ball.reverseVelocityX();
+			}
+		}
 	}
 	
 	public void drawPaddle(Paddle paddle) {

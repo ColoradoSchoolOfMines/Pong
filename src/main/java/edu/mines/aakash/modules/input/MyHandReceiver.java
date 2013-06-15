@@ -72,4 +72,12 @@ public class MyHandReceiver extends HandReceiver {
 		}
 		return null;
 	}
+	
+	public Coordinate3D getLeftHandPosition() {
+		return leftPosition;
+	}
+	
+	public Coordinate3D getRightHandPosition() {
+		return rightPosition;
+	}
 }
