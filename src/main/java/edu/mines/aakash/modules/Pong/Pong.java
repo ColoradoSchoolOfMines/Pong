@@ -1,9 +1,9 @@
-package edu.mines.aakash.modules;
+package edu.mines.aakash.modules.Pong;
 
 import processing.core.PApplet;
-import edu.mines.aakash.modules.input.MyHandReceiver;
-import edu.mines.aakash.modules.players.HumanPlayer;
-import edu.mines.aakash.modules.players.Player;
+import edu.mines.aakash.modules.Pong.input.MyHandReceiver;
+import edu.mines.aakash.modules.Pong.players.HumanPlayer;
+import edu.mines.aakash.modules.Pong.players.Player;
 import edu.mines.acmX.exhibit.input_services.events.EventManager;
 import edu.mines.acmX.exhibit.input_services.events.EventType;
 import edu.mines.acmX.exhibit.input_services.hardware.BadFunctionalityRequestException;
@@ -27,7 +27,7 @@ public class Pong extends ProcessingModule {
 	public static final int STATE_OVER = 2;
 	
 	public static final int POINTS_OVER = 5;
-	public static final boolean DEBUG_HANDS = true;
+	public static final boolean DEBUG_HANDS = false;
 	
 	private int gameState;
 	
@@ -100,9 +100,8 @@ public class Pong extends ProcessingModule {
 	}
 	
 	public void update() {
-		
+		handDriver.updateDriver();
 		if (gameState == STATE_PLAYING) {
-			
 			checkBallPosition();
 			
 			// Update ball location

@@ -1,7 +1,7 @@
-package edu.mines.aakash.modules.players;
+package edu.mines.aakash.modules.Pong.players;
 
-import edu.mines.aakash.modules.Ball;
-import edu.mines.aakash.modules.Paddle;
+import edu.mines.aakash.modules.Pong.Ball;
+import edu.mines.aakash.modules.Pong.Paddle;
 
 public abstract class Player {
 	

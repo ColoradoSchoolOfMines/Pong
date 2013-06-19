@@ -1,6 +1,6 @@
-package edu.mines.aakash.modules.input;
+package edu.mines.aakash.modules.Pong.input;
 
-import edu.mines.aakash.modules.Pong;
+import edu.mines.aakash.modules.Pong.Pong;
 import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
 import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
@@ -21,15 +21,15 @@ public class MyHandReceiver extends HandReceiver {
 	}
 	
 	public void handCreated(HandPosition handPos) {
+		// TODO Scale the position
 		if (!game.isLeftPlayerConnected()) {
 			leftHandID = handPos.getId();
 			leftPosition = handPos.getPosition();
-			
 			game.leftPlayerConnected(true);
+			
 		} else if (!game.isRightPlayerConnected()) {
 			rightHandID = handPos.getId();
 			rightPosition = handPos.getPosition();
-			
 			game.rightPlayerConnected(true);
 		}
 		
@@ -54,6 +54,7 @@ public class MyHandReceiver extends HandReceiver {
 		} else if (id == rightHandID) {
 			game.rightPlayerConnected(false);
 		}
+		// TODO check if we need to end game
 	}
 	
 	public int getLeftHandID() {

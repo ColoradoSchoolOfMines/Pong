@@ -1,4 +1,4 @@
-package edu.mines.aakash.modules;
+package edu.mines.aakash.modules.Pong;
 
 public class Ball {
 	public static final int BALL_RADIUS = 25;

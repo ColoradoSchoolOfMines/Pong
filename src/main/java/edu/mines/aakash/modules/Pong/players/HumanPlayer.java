@@ -1,8 +1,8 @@
-package edu.mines.aakash.modules.players;
+package edu.mines.aakash.modules.Pong.players;
 
-import edu.mines.aakash.modules.Ball;
-import edu.mines.aakash.modules.Paddle;
-import edu.mines.aakash.modules.input.MyHandReceiver;
+import edu.mines.aakash.modules.Pong.Ball;
+import edu.mines.aakash.modules.Pong.Paddle;
+import edu.mines.aakash.modules.Pong.input.MyHandReceiver;
 
 public class HumanPlayer extends Player {
 	private MyHandReceiver receiver;

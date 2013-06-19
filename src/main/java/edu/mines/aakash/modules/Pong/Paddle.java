@@ -1,4 +1,4 @@
-package edu.mines.aakash.modules;
+package edu.mines.aakash.modules.Pong;
 
 public class Paddle {
 	public static final int PADDLE_WIDTH = 20;

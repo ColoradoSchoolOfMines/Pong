@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest
-    package="edu.mines.aakash.modules"
+    package="edu.mines.aakash.modules.Pong"
     class="Pong"
     icon="icon.png"
     title="Pong"
