@@ -3,6 +3,7 @@ package edu.mines.aakash.modules.Pong;
 import processing.core.PApplet;
 import edu.mines.aakash.modules.Pong.input.MyHandReceiver;
 import edu.mines.aakash.modules.Pong.players.HumanPlayer;
+import edu.mines.aakash.modules.Pong.players.KinectHumanPlayer;
 import edu.mines.aakash.modules.Pong.players.Player;
 import edu.mines.acmX.exhibit.input_services.events.EventManager;
 import edu.mines.acmX.exhibit.input_services.events.EventType;
@@ -171,8 +172,13 @@ public class Pong extends ProcessingModule {
 
 	public void initGame() {
 		ball.setInitialVelocity(initialVelocityX, 4);
-		leftPlayer = new HumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID());
-		rightPlayer = new HumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID());
+		if(!DEBUG_HANDS) {
+			leftPlayer = new KinectHumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
+			rightPlayer = new KinectHumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
+		} else {
+			leftPlayer = new HumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID());
+			rightPlayer = new HumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID());
+		}
 
 		lastPoint = 1;
 		leftPoints = rightPoints = 0;
