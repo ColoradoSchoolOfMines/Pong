@@ -28,7 +28,7 @@ public class Pong extends ProcessingModule {
 	public static final int STATE_OVER = 2;
 
 	public static final int POINTS_OVER = 5;
-	public static final boolean DEBUG_HANDS = true;
+	public static final boolean DEBUG_HANDS = false;
 
 	private int gameState;
 
