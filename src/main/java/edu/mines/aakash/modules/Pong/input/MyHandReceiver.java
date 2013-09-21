@@ -21,6 +21,7 @@ public class MyHandReceiver extends HandReceiver {
 	}
 	
 	public void handCreated(HandPosition handPos) {
+		System.out.println("hand create");
 		// TODO Scale the position
 		if (!game.isLeftPlayerConnected()) {
 			leftHandID = handPos.getId();
@@ -40,6 +41,7 @@ public class MyHandReceiver extends HandReceiver {
 	}
 	
 	public void handUpdated(HandPosition handPos) {
+		System.out.println("fjaklfhlkdsajfd");
 		if (handPos.getId() == leftHandID) {
 			leftPosition = handPos.getPosition();
 		} else if (handPos.getId() == rightHandID) {

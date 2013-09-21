@@ -11,7 +11,7 @@
         targetSdkVersion="0" />
         
     <inputs>
-        <input input-type="handtracking" />
+        <input optional="true" input-type="handtracking"/>
     </inputs>
     <requires-module>
         
