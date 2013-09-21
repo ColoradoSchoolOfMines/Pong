@@ -175,11 +175,11 @@ public class Pong extends ProcessingModule {
 	public void initGame() {
 		ball.setInitialVelocity(initialVelocityX, 4);
 		if(!DEBUG_HANDS) {
-			leftPlayer = new KinectHumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
-			rightPlayer = new KinectHumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
+			leftPlayer = new KinectHumanPlayer(leftPaddle, ball, height, receiver, receiver.getLeftHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
+			rightPlayer = new KinectHumanPlayer(rightPaddle, ball, height, receiver, receiver.getRightHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
 		} else {
-			leftPlayer = new HumanPlayer(leftPaddle, ball, receiver, receiver.getLeftHandID());
-			rightPlayer = new HumanPlayer(rightPaddle, ball, receiver, receiver.getRightHandID());
+			leftPlayer = new HumanPlayer(leftPaddle, ball, height, receiver, receiver.getLeftHandID());
+			rightPlayer = new HumanPlayer(rightPaddle, ball, height, receiver, receiver.getRightHandID());
 		}
 
 		lastPoint = 1;

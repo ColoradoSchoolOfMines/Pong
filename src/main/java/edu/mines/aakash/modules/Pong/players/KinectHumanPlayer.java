@@ -9,8 +9,8 @@ public class KinectHumanPlayer extends HumanPlayer {
 	private int trackingHeight, screenHeight;
 	private float marginFraction;
 	
-	public KinectHumanPlayer(Paddle paddle, Ball ball, MyHandReceiver receiver, int handID, int trackingHeight, int screenHeight, float marginFraction) {
-		super(paddle, ball, receiver, handID);
+	public KinectHumanPlayer(Paddle paddle, Ball ball, int screenH, MyHandReceiver receiver, int handID, int trackingHeight, int screenHeight, float marginFraction) {
+		super(paddle, ball, screenH, receiver, handID);
 		this.trackingHeight = trackingHeight;
 		this.screenHeight = screenHeight;
 		this.marginFraction = marginFraction;
@@ -19,7 +19,7 @@ public class KinectHumanPlayer extends HumanPlayer {
 	@Override
 	public void updatePaddlePosition() {
 		int newPosition = (int) receiver.getHandPosition(handID).getY(); 
-		myPaddle.setY(HandTrackingUtilities.getScaledHandY(newPosition, trackingHeight, screenHeight, marginFraction));
+		myPaddle.setY(ensureWithinBounds(HandTrackingUtilities.getScaledHandY(newPosition, trackingHeight, screenHeight, marginFraction)));
 	}
 
 }
