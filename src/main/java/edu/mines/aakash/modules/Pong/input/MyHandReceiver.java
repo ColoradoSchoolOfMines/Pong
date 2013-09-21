@@ -1,6 +1,8 @@
 package edu.mines.aakash.modules.Pong.input;
 
 import edu.mines.aakash.modules.Pong.Pong;
+import edu.mines.aakash.modules.Pong.players.HumanPlayer;
+import edu.mines.aakash.modules.Pong.players.KinectHumanPlayer;
 import edu.mines.acmX.exhibit.stdlib.graphics.Coordinate3D;
 import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
 import edu.mines.acmX.exhibit.stdlib.input_processing.receivers.HandReceiver;
@@ -28,24 +30,18 @@ public class MyHandReceiver extends HandReceiver {
 			leftHandID = handPos.getId();
 			leftPosition = handPos.getPosition();
 			game.leftPlayerConnected(true);
+			game.createLeftPlayer();
 			
 		} else if (!game.isRightPlayerConnected()) {
 			rightHandID = handPos.getId();
 			rightPosition = handPos.getPosition();
 			game.rightPlayerConnected(true);
+			game.createRightPlayer();
 		}
 		
 		// If both are connected, begin the game.
 		if (game.isLeftPlayerConnected() && game.isRightPlayerConnected()) {
 			game.initGame();
-		}
-	}
-	
-	public void handUpdated(HandPosition handPos) {
-		if (handPos.getId() == leftHandID) {
-			leftPosition = handPos.getPosition();
-		} else if (handPos.getId() == rightHandID) {
-			rightPosition = handPos.getPosition();
 		}
 	}
 	
@@ -57,6 +53,16 @@ public class MyHandReceiver extends HandReceiver {
 			game.rightPlayerConnected(false);
 		}
 		// TODO check if we need to end game
+	}
+	
+	@Override
+	public void handUpdated(HandPosition pos) {
+		int id = pos.getId();
+		if (id == leftHandID) {
+			leftPosition = pos.getPosition(); 
+		} else if (id == rightHandID) {
+			rightPosition = pos.getPosition();
+		}
 	}
 	
 	public int getLeftHandID() {

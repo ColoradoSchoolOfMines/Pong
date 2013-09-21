@@ -1,5 +1,8 @@
 package edu.mines.aakash.modules.Pong;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import processing.core.PApplet;
 import edu.mines.aakash.modules.Pong.input.MyHandReceiver;
 import edu.mines.aakash.modules.Pong.players.HumanPlayer;
@@ -31,6 +34,8 @@ public class Pong extends ProcessingModule {
 	public static final boolean DEBUG_HANDS = false;
 
 	private int gameState;
+	
+	private static Logger logger = LogManager.getLogger(Pong.class);
 
 	// Game models
 	private Ball ball;
@@ -42,8 +47,8 @@ public class Pong extends ProcessingModule {
 
 	// We only use these to determine if a player is connected,
 	// not for game logic
-	private boolean leftPlayerConnected;
-	private boolean rightPlayerConnected;
+	private boolean leftPlayerConnected = false;
+	private boolean rightPlayerConnected = false;
 
 	private int initialVelocityX;
 
@@ -112,15 +117,26 @@ public class Pong extends ProcessingModule {
 		if(!DEBUG_HANDS){
 			handDriver.updateDriver();
 		}
+
 		if (gameState == STATE_PLAYING) {
 			checkBallPosition();
 
 			// Update ball location
 			ball.update();
-
+			
 			// Update player information
 			leftPlayer.updatePaddlePosition();
 			rightPlayer.updatePaddlePosition();
+		} else {
+			// let the players see their movements
+			if(leftPlayerConnected) {
+				logger.debug("Left player connected");
+				leftPlayer.updatePaddlePosition();
+			}
+			if(rightPlayerConnected) {
+				logger.debug("Right player connected");
+				rightPlayer.updatePaddlePosition();
+			}
 		}
 	}
 
@@ -135,10 +151,6 @@ public class Pong extends ProcessingModule {
 		// draw paddle
 		drawPaddle(leftPaddle);
 		drawPaddle(rightPaddle);
-
-		// draw paddle pos
-		ellipse(leftPaddle.getX(), leftPaddle.getY(), 5, 5);
-		ellipse(rightPaddle.getX(), rightPaddle.getY(), 5, 5);
 
 		// draw ball
 		drawBall(ball);
@@ -174,18 +186,37 @@ public class Pong extends ProcessingModule {
 
 	public void initGame() {
 		ball.setInitialVelocity(initialVelocityX, 4);
-		if(!DEBUG_HANDS) {
-			leftPlayer = new KinectHumanPlayer(leftPaddle, ball, height, receiver, receiver.getLeftHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
-			rightPlayer = new KinectHumanPlayer(rightPaddle, ball, height, receiver, receiver.getRightHandID(), handDriver.getHandTrackingHeight(), height, 1/(float)6);
-		} else {
-			leftPlayer = new HumanPlayer(leftPaddle, ball, height, receiver, receiver.getLeftHandID());
-			rightPlayer = new HumanPlayer(rightPaddle, ball, height, receiver, receiver.getRightHandID());
-		}
 
 		lastPoint = 1;
 		leftPoints = rightPoints = 0;
 
 		gameState = STATE_PLAYING;
+	}
+	
+	public HumanPlayer createPlayer(int handID) {
+		Paddle p;
+		if (handID == receiver.getRightHandID()) {
+			p = rightPaddle;
+		} else if (handID == receiver.getLeftHandID()) {
+			p = leftPaddle;
+		} else {
+			logger.error("Recieved invalid hand id");
+			return null;
+		}
+		
+		if(!DEBUG_HANDS) {
+			return new KinectHumanPlayer(p, ball, height, receiver, handID, handDriver.getHandTrackingHeight(), height, 1/(float)6);
+		} else {
+			return new HumanPlayer(p, ball, height, receiver, handID);
+		}
+	}
+	
+	public void createLeftPlayer() {
+		leftPlayer = createPlayer(receiver.getLeftHandID());
+	}
+	
+	public void createRightPlayer() {
+		rightPlayer = createPlayer(receiver.getRightHandID());
 	}
 
 	public void endGame() {
