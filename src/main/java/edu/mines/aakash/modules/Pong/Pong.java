@@ -164,8 +164,10 @@ public class Pong extends ProcessingModule {
 			// Draw score
 			stroke(255);
 			fill(255);
-			text(PApplet.nfs(leftPoints, 2) + "", 20, 20);
-			text(PApplet.nfs(rightPoints, 2), screenWidth - 20, 20);
+			int center = screenWidth / 2;
+			textSize(64);
+			text(PApplet.nfs(leftPoints, 2) + "", center - 64 * 2, 64);
+			text(PApplet.nfs(rightPoints, 2), center, 64);
 
 		}
 	}
