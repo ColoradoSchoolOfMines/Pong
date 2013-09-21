@@ -27,7 +27,7 @@ public class Pong extends ProcessingModule {
 	public static final int STATE_OVER = 2;
 	
 	public static final int POINTS_OVER = 5;
-	public static final boolean DEBUG_HANDS = false;
+	public static final boolean DEBUG_HANDS = true;
 	
 	private int gameState;
 	
@@ -259,33 +259,26 @@ public class Pong extends ProcessingModule {
 	
 	public void mouseReleased() {
 		if (DEBUG_HANDS) {
-			if (mouseButton == LEFT) {
-				EventType type = EventType.HAND_UPDATED;
-				if (!leftPlayerConnected) {
-					type = EventType.HAND_CREATED;
-				}
-				EventManager.getInstance().fireEvent(type,
-						new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
-			} else if (mouseButton == RIGHT) {
-				EventType type = EventType.HAND_UPDATED;
-				if (!rightPlayerConnected) {
-					type = EventType.HAND_CREATED;
-				}
-				EventManager.getInstance().fireEvent(type,
-						new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
+			if( !leftPlayerConnected ) {
+				EventType type = EventType.HAND_CREATED;
+				EventManager.getInstance().fireEvent(type, new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
+				
+			}
+			if( !rightPlayerConnected ) {
+				EventType type = EventType.HAND_CREATED;
+				EventManager.getInstance().fireEvent(type, new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
+				
 			}
 		}
 	}
 	
 	public void mouseMoved() {
 		if (DEBUG_HANDS && gameState == STATE_PLAYING) {
-			if (mouseButton == LEFT) {
-				EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
-						new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
-			} else if (mouseButton == RIGHT) {
-				EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
-						new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
-			}
+
+			EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
+					new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
+			EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
+					new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
 		}
 	}
 	
