@@ -1,10 +1,13 @@
 package edu.mines.aakash.modules.Pong;
 
+import java.util.Timer;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import processing.core.PApplet;
 import edu.mines.aakash.modules.Pong.input.MyHandReceiver;
+import edu.mines.aakash.modules.Pong.logic.Restart;
 import edu.mines.aakash.modules.Pong.players.HumanPlayer;
 import edu.mines.aakash.modules.Pong.players.KinectHumanPlayer;
 import edu.mines.aakash.modules.Pong.players.Player;
@@ -22,19 +25,23 @@ import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
 
 /**
  * Hello world!
- *
+ * 
  */
 public class Pong extends ProcessingModule {
 
-	public static final int STATE_WAITING = 0;
-	public static final int STATE_PLAYING = 1;
-	public static final int STATE_OVER = 2;
+	public static final String GAME_OVER = "Game Over";
+
+	public enum State {
+		STATE_WAITING, STATE_PLAYING, STATE_OVER
+	}
 
 	public static final int POINTS_OVER = 5;
-	public static final boolean DEBUG_HANDS = false;
-
-	private int gameState;
+	public static final boolean DEBUG_HANDS = true;
 	
+	public static final int END_DELAY = 5000;
+
+	private State gameState;
+
 	private static Logger logger = LogManager.getLogger(Pong.class);
 
 	// Game models
@@ -59,16 +66,13 @@ public class Pong extends ProcessingModule {
 
 	private HandTrackerInterface handDriver;
 	private MyHandReceiver receiver;
+	private Timer timer;
 
 	public void setup() {
 		size(screenWidth, screenHeight);
 		frameRate(30);
-
-		// Initialize game state
-		gameState = STATE_WAITING;
-
-		// We want the ball to go across the screen in 5 seconds.
-		initialVelocityX = (int) (screenWidth / 5 / frameRate); 
+		
+		startRound();
 
 		// Create ball and paddle
 		ball = new Ball(screenWidth / 2, screenHeight / 2);
@@ -76,16 +80,14 @@ public class Pong extends ProcessingModule {
 		rightPaddle = new Paddle(screenWidth - Paddle.PADDLE_WIDTH,
 				(screenHeight - Paddle.PADDLE_HEIGHT) / 2);
 
-		leftPlayerConnected = false;
-		rightPlayerConnected = false;
-
 		// Register hand tracking
 		HardwareManager hm;
 		try {
 			hm = HardwareManager.getInstance();
 			receiver = new MyHandReceiver(this);
-			if(!DEBUG_HANDS){
-				handDriver = (HandTrackerInterface) hm.getInitialDriver("handtracking");
+			if (!DEBUG_HANDS) {
+				handDriver = (HandTrackerInterface) hm
+						.getInitialDriver("handtracking");
 
 				handDriver.registerHandCreated(receiver);
 				handDriver.registerHandUpdated(receiver);
@@ -114,33 +116,62 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void update() {
-		if(!DEBUG_HANDS){
+		if (!DEBUG_HANDS) {
 			handDriver.updateDriver();
 		}
 
-		if (gameState == STATE_PLAYING) {
+		switch (gameState) {
+		case STATE_WAITING:
+			// let the players see their movements
+			if (leftPlayerConnected) {
+				logger.debug("Left player connected");
+				leftPlayer.updatePaddlePosition();
+			}
+			if (rightPlayerConnected) {
+				logger.debug("Right player connected");
+				rightPlayer.updatePaddlePosition();
+			}
+			break;
+		case STATE_PLAYING:
 			checkBallPosition();
 
 			// Update ball location
 			ball.update();
-			
+
 			// Update player information
 			leftPlayer.updatePaddlePosition();
 			rightPlayer.updatePaddlePosition();
-		} else {
-			// let the players see their movements
-			if(leftPlayerConnected) {
-				logger.debug("Left player connected");
-				leftPlayer.updatePaddlePosition();
-			}
-			if(rightPlayerConnected) {
-				logger.debug("Right player connected");
-				rightPlayer.updatePaddlePosition();
-			}
+			break;
+		case STATE_OVER:
+			logger.info("Do nothing during state over");
+			break;
+		default:
+			logger.error("Not a valid game state");
+			break;
 		}
+
 	}
 
 	public void draw() {
+		drawCommon();
+
+		switch (gameState) {
+		case STATE_WAITING:
+			drawStateWaiting();
+			break;
+		case STATE_PLAYING:
+			drawStatePlaying();
+			break;
+		case STATE_OVER:
+			drawStateOver();
+			break;
+		default:
+			logger.error("Not a valid game state");
+			break;
+		}
+	}
+
+	public void drawCommon() {
 		update();
 		background(0);
 
@@ -154,45 +185,63 @@ public class Pong extends ProcessingModule {
 
 		// draw ball
 		drawBall(ball);
+	}
 
-		if (gameState == STATE_WAITING) {
-			// TODO Draw welcome text
-			if (!leftPlayerConnected) {
-				stroke(255);
-				fill(255);
-				text("Waiting for left player to join",
-						screenWidth / 4,
-						screenHeight / 2);
-			}
+	public void drawStatePlaying() {
+		// Draw score
+		stroke(255);
+		fill(255);
+		int center = screenWidth / 2;
+		textSize(64);
+		text(PApplet.nfs(leftPoints, 2) + "", center - 64 * 2, 64);
+		text(PApplet.nfs(rightPoints, 2), center, 64);
+	}
 
-			if (!rightPlayerConnected) {
-				stroke(255);
-				fill(255);
-				text("Waiting for right player to join",
-						3 * screenWidth / 4,
-						screenHeight / 2);
-			}
-		} else if (gameState == STATE_PLAYING) {
-			// Draw score
+	public void drawStateWaiting() {
+		// TODO Draw welcome text
+		if (!leftPlayerConnected) {
 			stroke(255);
 			fill(255);
-			int center = screenWidth / 2;
-			textSize(64);
-			text(PApplet.nfs(leftPoints, 2) + "", center - 64 * 2, 64);
-			text(PApplet.nfs(rightPoints, 2), center, 64);
+			text("Waiting for left player to join", screenWidth / 4,
+					screenHeight / 2);
+		}
 
+		if (!rightPlayerConnected) {
+			stroke(255);
+			fill(255);
+			text("Waiting for right player to join", 3 * screenWidth / 4,
+					screenHeight / 2);
 		}
 	}
 
+	public void drawStateOver() {
+		int centerx = screenWidth / 2;
+		int centery = screenHeight / 2;
+		text(GAME_OVER, centerx - textWidth(GAME_OVER) / 2, centery);
+	}
+
 	public void initGame() {
+		if (timer != null) {
+			timer.cancel();
+		}
+
+		// We want the ball to go across the screen in 2.5 seconds.
+		initialVelocityX = (int) (screenWidth / 2.5 / frameRate);
+		
 		ball.setInitialVelocity(initialVelocityX, 4);
 
 		lastPoint = 1;
 		leftPoints = rightPoints = 0;
 
-		gameState = STATE_PLAYING;
+		gameState = State.STATE_PLAYING;
 	}
 	
+	public void startRound() {
+		gameState = State.STATE_WAITING;
+		leftPlayerConnected = false;
+		rightPlayerConnected = false;
+	}
+
 	public HumanPlayer createPlayer(int handID) {
 		Paddle p;
 		if (handID == receiver.getRightHandID()) {
@@ -203,24 +252,32 @@ public class Pong extends ProcessingModule {
 			logger.error("Recieved invalid hand id");
 			return null;
 		}
-		
-		if(!DEBUG_HANDS) {
-			return new KinectHumanPlayer(p, ball, height, receiver, handID, handDriver.getHandTrackingHeight(), height, 1/(float)6);
+
+		if (!DEBUG_HANDS) {
+			return new KinectHumanPlayer(p, ball, height, receiver, handID,
+					handDriver.getHandTrackingHeight(), height, 1 / (float) 6);
 		} else {
 			return new HumanPlayer(p, ball, height, receiver, handID);
 		}
 	}
-	
+
 	public void createLeftPlayer() {
 		leftPlayer = createPlayer(receiver.getLeftHandID());
 	}
-	
+
 	public void createRightPlayer() {
 		rightPlayer = createPlayer(receiver.getRightHandID());
 	}
 
 	public void endGame() {
-		gameState = STATE_OVER;
+		gameState = State.STATE_OVER;
+		drawStateOver();
+		launchTimer(this);
+	}
+	
+	private void launchTimer(Pong object) {
+		timer = new Timer();
+		timer.schedule(new Restart(object), END_DELAY);
 	}
 
 	public void resetBall() {
@@ -276,9 +333,11 @@ public class Pong extends ProcessingModule {
 		int ballX = ball.getX();
 		int ballY = ball.getY();
 
-		if (ballY > leftPaddle.getY() && ballY < (leftPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
+		if (ballY > leftPaddle.getY()
+				&& ballY < (leftPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
 			if (Math.abs((ballX - leftPaddle.getX() - Paddle.PADDLE_WIDTH)) < Ball.BALL_RADIUS) {
-				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH + Ball.BALL_RADIUS);
+				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH
+						+ Ball.BALL_RADIUS);
 				ball.reverseVelocityX();
 			}
 		}
@@ -287,7 +346,8 @@ public class Pong extends ProcessingModule {
 	public void checkBallCollisionOnRightPaddle() {
 		int ballX = ball.getX();
 		int ballY = ball.getY();
-		if (ballY > rightPaddle.getY() && ballY < (rightPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
+		if (ballY > rightPaddle.getY()
+				&& ballY < (rightPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
 			if (Math.abs((ballX - rightPaddle.getX())) < Ball.BALL_RADIUS) {
 				ball.setX(rightPaddle.getX() - Ball.BALL_RADIUS);
 				ball.reverseVelocityX();
@@ -298,8 +358,8 @@ public class Pong extends ProcessingModule {
 	public void drawPaddle(Paddle paddle) {
 		stroke(255);
 		fill(255);
-		rect(paddle.getX(), paddle.getY(),
-				Paddle.PADDLE_WIDTH, Paddle.PADDLE_HEIGHT);
+		rect(paddle.getX(), paddle.getY(), Paddle.PADDLE_WIDTH,
+				Paddle.PADDLE_HEIGHT);
 	}
 
 	public void drawBall(Ball ball) {
@@ -312,21 +372,29 @@ public class Pong extends ProcessingModule {
 
 	public void mouseReleased() {
 		if (DEBUG_HANDS) {
-			if( !leftPlayerConnected ) {
+			if (!leftPlayerConnected) {
 				EventType type = EventType.HAND_CREATED;
-				EventManager.getInstance().fireEvent(type, new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
+				EventManager.getInstance()
+						.fireEvent(
+								type,
+								new HandPosition(1, new Coordinate3D(mouseX,
+										mouseY, 0)));
 
 			}
-			if( !rightPlayerConnected ) {
+			if (!rightPlayerConnected) {
 				EventType type = EventType.HAND_CREATED;
-				EventManager.getInstance().fireEvent(type, new HandPosition(2, new Coordinate3D(mouseX, mouseY, 0)));
+				EventManager.getInstance()
+						.fireEvent(
+								type,
+								new HandPosition(2, new Coordinate3D(mouseX,
+										mouseY, 0)));
 
 			}
 		}
 	}
 
 	public void mouseMoved() {
-		if (DEBUG_HANDS && gameState == STATE_PLAYING) {
+		if (DEBUG_HANDS && gameState == State.STATE_PLAYING) {
 			EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
 					new HandPosition(1, new Coordinate3D(mouseX, mouseY, 0)));
 			EventManager.getInstance().fireEvent(EventType.HAND_UPDATED,
