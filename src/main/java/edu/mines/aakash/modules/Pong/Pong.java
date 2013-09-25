@@ -27,6 +27,7 @@ import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
  * Hello world!
  * 
  */
+@SuppressWarnings("serial")
 public class Pong extends ProcessingModule {
 
 	public static final String GAME_OVER = "Game Over";
@@ -133,10 +134,10 @@ public class Pong extends ProcessingModule {
 			}
 			break;
 		case STATE_PLAYING:
-			checkBallPosition();
-
 			// Update ball location
 			ball.update();
+
+			checkBallPosition();
 
 			// Update player information
 			leftPlayer.updatePaddlePosition();
@@ -338,7 +339,9 @@ public class Pong extends ProcessingModule {
 			if (Math.abs((ballX - leftPaddle.getX() - Paddle.PADDLE_WIDTH)) < Ball.BALL_RADIUS) {
 				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH
 						+ Ball.BALL_RADIUS);
+				// turn around and move to be outside the paddle
 				ball.reverseVelocityX();
+				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH + ball.BALL_RADIUS);
 			}
 		}
 	}
@@ -350,7 +353,9 @@ public class Pong extends ProcessingModule {
 				&& ballY < (rightPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
 			if (Math.abs((ballX - rightPaddle.getX())) < Ball.BALL_RADIUS) {
 				ball.setX(rightPaddle.getX() - Ball.BALL_RADIUS);
+				// turn around and move to be outside the paddle
 				ball.reverseVelocityX();
+				ball.setX(rightPaddle.getX() - ball.BALL_RADIUS);
 			}
 		}
 	}
@@ -367,7 +372,7 @@ public class Pong extends ProcessingModule {
 		stroke(red);
 		fill(red);
 
-		ellipse(ball.getX(), ball.getY(), Ball.BALL_RADIUS, Ball.BALL_RADIUS);
+		ellipse(ball.getX(), ball.getY(), Ball.BALL_RADIUS * 2, Ball.BALL_RADIUS * 2);
 	}
 
 	public void mouseReleased() {
