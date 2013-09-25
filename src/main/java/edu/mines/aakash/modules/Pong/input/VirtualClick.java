@@ -1,4 +1,4 @@
-package edu.mines.aakash.modules.input;
+package edu.mines.aakash.modules.Pong.input;
 public abstract class VirtualClick {
 	
 	protected int duration;

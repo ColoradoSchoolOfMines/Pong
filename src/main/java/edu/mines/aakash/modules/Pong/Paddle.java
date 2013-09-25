@@ -1,8 +1,8 @@
-package edu.mines.aakash.modules;
+package edu.mines.aakash.modules.Pong;
 
 public class Paddle {
 	public static final int PADDLE_WIDTH = 20;
-	public static final int PADDLE_HEIGHT = 70;
+	public static final int PADDLE_HEIGHT = 140;
 	
 	private int x;
 	private int y;
@@ -20,7 +20,8 @@ public class Paddle {
 		return this.y;
 	}
 	
-	public void addY(int val) {
-		this.y += val;
+	public void setY(int val) {
+		this.y = val;
+		
 	}
 }
