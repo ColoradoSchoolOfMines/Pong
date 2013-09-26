@@ -40,6 +40,8 @@ public class Pong extends ProcessingModule {
 	public static final int POINTS_OVER = 5;
 	public static final boolean DEBUG_HANDS = false;
 	
+	public static final int BALL_VARIABILITY = 40;
+	
 	public static final int END_DELAY = 5000;
 
 	private State gameState;
@@ -290,7 +292,7 @@ public class Pong extends ProcessingModule {
 		ball.setX(screenWidth / 2);
 		ball.setY(screenHeight / 2);
 		int direction = lastPoint == 0 ? -1 : 1;
-		ball.setInitialVelocity(direction * initialVelocityX, 3.5 + 100 *rand.nextDouble() + (rand.nextBoolean() ? 0 : -8));
+		ball.setInitialVelocity(direction * initialVelocityX, 3.5 + BALL_VARIABILITY *rand.nextDouble() + (rand.nextBoolean() ? 0 : -8));
 	}
 
 	public void checkBallPosition() {
