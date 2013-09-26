@@ -1,5 +1,6 @@
 package edu.mines.aakash.modules.Pong;
 
+import java.util.Random;
 import java.util.Timer;
 
 import org.apache.logging.log4j.LogManager;
@@ -39,11 +40,15 @@ public class Pong extends ProcessingModule {
 	public static final int POINTS_OVER = 5;
 	public static final boolean DEBUG_HANDS = false;
 	
+	public static final int BALL_VARIABILITY = 40;
+	
 	public static final int END_DELAY = 5000;
 
 	private State gameState;
 
 	private static Logger logger = LogManager.getLogger(Pong.class);
+	
+	Random rand;
 
 	// Game models
 	private Ball ball;
@@ -58,7 +63,7 @@ public class Pong extends ProcessingModule {
 	private boolean leftPlayerConnected = false;
 	private boolean rightPlayerConnected = false;
 
-	private int initialVelocityX;
+	private int totalVelocity;
 
 	// 0 - left, 1 - right
 	private int lastPoint;
@@ -70,6 +75,8 @@ public class Pong extends ProcessingModule {
 	private Timer timer;
 
 	public void setup() {
+		rand = new Random();
+		
 		size(screenWidth, screenHeight);
 		frameRate(30);
 		
@@ -202,11 +209,12 @@ public class Pong extends ProcessingModule {
 		drawPaddle(leftPaddle);
 		drawPaddle(rightPaddle);
 
-		// draw ball
-		drawBall(ball);
+
 	}
 
 	public void drawStatePlaying() {
+		// draw ball
+		drawBall(ball);
 		// Draw score
 		final float PADDING_FROM_CENTER = 20;
 		final float PADDING_FROM_TOP = 64;
@@ -222,7 +230,10 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void drawStateWaiting() {
+		// draw ball
+		drawBall(ball);
 		// TODO Draw welcome text
+		textSize(18);
 		if (!leftPlayerConnected) {
 			textSize(24);
 			stroke(255);
@@ -245,8 +256,11 @@ public class Pong extends ProcessingModule {
 	public void drawStateOver() {
 		int centerx = screenWidth / 2;
 		int centery = screenHeight / 2;
+
+		textSize(64);
 		textAlign(CENTER,CENTER);
 		text(GAME_OVER, centerx, centery);
+
 	}
 
 	public void initGame() {
@@ -254,11 +268,7 @@ public class Pong extends ProcessingModule {
 			timer.cancel();
 		}
 
-		// We want the ball to go across the screen in 2.5 seconds.
-		initialVelocityX = (int) (screenWidth / 2.5 / frameRate);
-		
-		ball.setInitialVelocity(initialVelocityX, 4);
-
+		resetBall();
 		lastPoint = 1;
 		leftPoints = rightPoints = 0;
 
@@ -323,12 +333,35 @@ public class Pong extends ProcessingModule {
 		timer = new Timer();
 		timer.schedule(new Restart(object), END_DELAY);
 	}
+	
+	private double randWithinRange(double low, double high) {
+		return low + (Math.random() * (high - low));
+	}
+	
+	private double randWithinRangeWithOffset(double low, double high, double offset) {
+		double rand = randWithinRange(low, high);
+		if(rand < 0) {
+			return rand - offset;
+		} else {
+			return rand + offset;
+		}
+	}
+	
+	private double pythagOtherLeg(double c, double a) {
+		return Math.pow(Math.pow(c, 2) - Math.pow(a,2),0.5);
+	}
 
 	public void resetBall() {
+		// We want the ball to go across the screen in 2.5 seconds.
+		totalVelocity = (int) (screenWidth / 2.5 / frameRate);
+		logger.debug("Total v: " + totalVelocity);
+		double velocityY = randWithinRangeWithOffset(-totalVelocity/4.0, totalVelocity/4.0, totalVelocity/8.0);
+		double velocityX = pythagOtherLeg(totalVelocity, velocityY);
+		logger.debug("velocity: (" + velocityX + "," + velocityY +")");
 		ball.setX(screenWidth / 2);
 		ball.setY(screenHeight / 2);
 		int direction = lastPoint == 0 ? -1 : 1;
-		ball.setInitialVelocity(direction * initialVelocityX, 4);
+		ball.setInitialVelocity(direction * velocityX, velocityY);
 	}
 
 	public void checkBallPosition() {

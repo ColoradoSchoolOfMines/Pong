@@ -5,8 +5,8 @@ public class Ball {
 	
 	private int x;
 	private int y;
-	private int velX;
-	private int velY;
+	private double velX;
+	private double velY;
 	
 	public Ball(int x, int y) {
 		this.x = x;
@@ -19,9 +19,9 @@ public class Ball {
 		this.y += velY;
 	}
 	
-	public void setInitialVelocity(int velocityX, int velocityY) {
+	public void setInitialVelocity(double velocityX, double d) {
 		this.velX = velocityX;
-		this.velY = velocityY;
+		this.velY = d;
 	}
 	
 	public void setX(int val) {
