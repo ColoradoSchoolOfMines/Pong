@@ -13,7 +13,7 @@ public class Restart extends TimerTask {
 	
 	@Override
 	public void run() {
-		object.initGame();
+		object.startRound();
 	}
 
 }

@@ -191,11 +191,12 @@ public class Pong extends ProcessingModule {
 		drawPaddle(leftPaddle);
 		drawPaddle(rightPaddle);
 
-		// draw ball
-		drawBall(ball);
+
 	}
 
 	public void drawStatePlaying() {
+		// draw ball
+		drawBall(ball);
 		// Draw score
 		stroke(255);
 		fill(255);
@@ -206,7 +207,10 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void drawStateWaiting() {
+		// draw ball
+		drawBall(ball);
 		// TODO Draw welcome text
+		textSize(18);
 		if (!leftPlayerConnected) {
 			stroke(255);
 			fill(255);
@@ -225,6 +229,7 @@ public class Pong extends ProcessingModule {
 	public void drawStateOver() {
 		int centerx = screenWidth / 2;
 		int centery = screenHeight / 2;
+		textSize(64);
 		text(GAME_OVER, centerx - textWidth(GAME_OVER) / 2, centery);
 	}
 
