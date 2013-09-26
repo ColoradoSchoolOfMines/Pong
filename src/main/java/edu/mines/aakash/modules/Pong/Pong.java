@@ -1,5 +1,6 @@
 package edu.mines.aakash.modules.Pong;
 
+import java.util.Random;
 import java.util.Timer;
 
 import org.apache.logging.log4j.LogManager;
@@ -37,13 +38,15 @@ public class Pong extends ProcessingModule {
 	}
 
 	public static final int POINTS_OVER = 5;
-	public static final boolean DEBUG_HANDS = true;
+	public static final boolean DEBUG_HANDS = false;
 	
 	public static final int END_DELAY = 5000;
 
 	private State gameState;
 
 	private static Logger logger = LogManager.getLogger(Pong.class);
+	
+	Random rand;
 
 	// Game models
 	private Ball ball;
@@ -70,6 +73,8 @@ public class Pong extends ProcessingModule {
 	private Timer timer;
 
 	public void setup() {
+		rand = new Random();
+		
 		size(screenWidth, screenHeight);
 		frameRate(30);
 		
@@ -226,11 +231,9 @@ public class Pong extends ProcessingModule {
 			timer.cancel();
 		}
 
-		// We want the ball to go across the screen in 2.5 seconds.
-		initialVelocityX = (int) (screenWidth / 2.5 / frameRate);
 		
-		ball.setInitialVelocity(initialVelocityX, 4);
-
+		
+		resetBall();
 		lastPoint = 1;
 		leftPoints = rightPoints = 0;
 
@@ -282,10 +285,12 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void resetBall() {
+		// We want the ball to go across the screen in 2.5 seconds.
+		initialVelocityX = (int) (screenWidth / 2.5 / frameRate);
 		ball.setX(screenWidth / 2);
 		ball.setY(screenHeight / 2);
 		int direction = lastPoint == 0 ? -1 : 1;
-		ball.setInitialVelocity(direction * initialVelocityX, 4);
+		ball.setInitialVelocity(direction * initialVelocityX, 3.5 + 100 *rand.nextDouble() + (rand.nextBoolean() ? 0 : -8));
 	}
 
 	public void checkBallPosition() {
