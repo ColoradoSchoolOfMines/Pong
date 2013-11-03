@@ -35,21 +35,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>processing</groupId>
-    	<artifactId>core</artifactId>
-    	<version>1.5.1</version>
-    	<scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.OpenNI</groupId>
-      <artifactId>OpenNI</artifactId>
-      <version>1.5.4.0</version>
-      <scope>compile</scope>
-	</dependency>
-    <dependency>
     	<groupId>edu.mines.acmX.exhibit</groupId>
     	<artifactId>interfacesdk</artifactId>
-    	<version>0.1.0</version>
+    	<version>0.1.2</version>
     	<scope>compile</scope>
     </dependency>
     <dependency>
