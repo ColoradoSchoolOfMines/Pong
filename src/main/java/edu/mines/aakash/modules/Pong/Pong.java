@@ -407,39 +407,23 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void checkBallCollisionOnLeftPaddle() {
-		int ballX = ball.getX();
-		int ballY = ball.getY();
-
-		if (ballY > leftPaddle.getY()
-				&& ballY < (leftPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
-			if (Math.abs((ballX - leftPaddle.getX() - Paddle.PADDLE_WIDTH)) < Ball.BALL_RADIUS) {
-				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH
-						+ Ball.BALL_RADIUS);
-				// turn around and move to be outside the paddle
-				ball.reverseVelocityX();
-				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH + ball.BALL_RADIUS);
-			}
+		if( ball.isIntersectedWith(leftPaddle)) {
+			ball.reverseVelocityX();
+			ball.setX((int)leftPaddle.getX() + Paddle.PADDLE_WIDTH + ball.BALL_RADIUS);
 		}
 	}
 
 	public void checkBallCollisionOnRightPaddle() {
-		int ballX = ball.getX();
-		int ballY = ball.getY();
-		if (ballY > rightPaddle.getY()
-				&& ballY < (rightPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
-			if (Math.abs((ballX - rightPaddle.getX())) < Ball.BALL_RADIUS) {
-				ball.setX(rightPaddle.getX() - Ball.BALL_RADIUS);
-				// turn around and move to be outside the paddle
-				ball.reverseVelocityX();
-				ball.setX(rightPaddle.getX() - ball.BALL_RADIUS);
-			}
+		if( ball.isIntersectedWith(rightPaddle)) {
+			ball.reverseVelocityX();
+			ball.setX((int)rightPaddle.getX() - ball.BALL_RADIUS);
 		}
 	}
 
 	public void drawPaddle(Paddle paddle) {
 		stroke(255);
 		fill(255);
-		rect(paddle.getX(), paddle.getY(), Paddle.PADDLE_WIDTH,
+		rect((float)paddle.getX(), (float)paddle.getY(), Paddle.PADDLE_WIDTH,
 				Paddle.PADDLE_HEIGHT);
 	}
 

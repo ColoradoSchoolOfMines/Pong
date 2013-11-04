@@ -1,5 +1,7 @@
 package edu.mines.aakash.modules.Pong;
 
+import java.awt.geom.Rectangle2D;
+
 public class Ball {
 	public static final int BALL_RADIUS = 25;
 	
@@ -12,6 +14,20 @@ public class Ball {
 		this.x = x;
 		this.y = y;
 		
+	}
+	
+	public Rectangle2D getRectangleRepresentation() {
+		return new Rectangle2D.Double(x - BALL_RADIUS, y - BALL_RADIUS, BALL_RADIUS * 2, BALL_RADIUS * 2);
+	}
+	
+	public boolean isIntersectedWith(Rectangle2D other) {
+		Rectangle2D ballRect = getRectangleRepresentation();
+		Rectangle2D intersected = ballRect.createIntersection(other);
+		if(intersected.isEmpty()){
+			return false;
+		} else {
+			return true;
+		}
 	}
 	
 	public void update() {
