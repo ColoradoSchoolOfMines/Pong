@@ -41,7 +41,7 @@ public class MyHandReceiver extends HandReceiver {
 		
 		// If both are connected, begin the game.
 		if (game.isLeftPlayerConnected() && game.isRightPlayerConnected()) {
-			game.initGame();
+			game.bothPlayersConnectedEvent();
 		}
 	}
 	

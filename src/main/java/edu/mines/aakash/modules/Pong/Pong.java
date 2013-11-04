@@ -33,11 +33,11 @@ public class Pong extends ProcessingModule {
 	public static final String GAME_OVER = "Game Over";
 
 	public enum State {
-		STATE_WAITING, STATE_PLAYING, STATE_OVER
+		STATE_GAME_START_WAITING, STATE_PLAYING, STATE_PAUSED, STATE_OVER
 	}
 
 	public static final int POINTS_OVER = 5;
-	public static final boolean DEBUG_HANDS = true;
+	public static final boolean DEBUG_HANDS = false;
 	
 	public static final int END_DELAY = 5000;
 
@@ -122,19 +122,27 @@ public class Pong extends ProcessingModule {
 		}
 
 		switch (gameState) {
-		case STATE_WAITING:
+		case STATE_GAME_START_WAITING:
 			// let the players see their movements
 			if (leftPlayerConnected) {
-				logger.debug("Left player connected");
 				leftPlayer.updatePaddlePosition();
 			}
 			if (rightPlayerConnected) {
-				logger.debug("Right player connected");
+				rightPlayer.updatePaddlePosition();
+			}
+			break;
+		case STATE_PAUSED:
+			// let the players see their movements
+			if (leftPlayerConnected) {
+				leftPlayer.updatePaddlePosition();
+			} 
+			if (rightPlayerConnected) {
+				
 				rightPlayer.updatePaddlePosition();
 			}
 			break;
 		case STATE_PLAYING:
-			// Update ball location
+
 			ball.update();
 
 			checkBallPosition();
@@ -144,7 +152,14 @@ public class Pong extends ProcessingModule {
 			rightPlayer.updatePaddlePosition();
 			break;
 		case STATE_OVER:
-			logger.info("Do nothing during state over");
+			// let the players see their movements
+			if (leftPlayerConnected) {
+				leftPlayer.updatePaddlePosition();
+			}
+			if (rightPlayerConnected) {
+				
+				rightPlayer.updatePaddlePosition();
+			} 
 			break;
 		default:
 			logger.error("Not a valid game state");
@@ -157,7 +172,10 @@ public class Pong extends ProcessingModule {
 		drawCommon();
 
 		switch (gameState) {
-		case STATE_WAITING:
+		case STATE_GAME_START_WAITING:
+			drawStateWaiting();
+			break;
+		case STATE_PAUSED:
 			drawStateWaiting();
 			break;
 		case STATE_PLAYING:
@@ -190,26 +208,35 @@ public class Pong extends ProcessingModule {
 
 	public void drawStatePlaying() {
 		// Draw score
+		final float PADDING_FROM_CENTER = 20;
+		final float PADDING_FROM_TOP = 64;
 		stroke(255);
 		fill(255);
 		int center = screenWidth / 2;
 		textSize(64);
-		text(PApplet.nfs(leftPoints, 2) + "", center - 64 * 2, 64);
-		text(PApplet.nfs(rightPoints, 2), center, 64);
+		textAlign(RIGHT);
+		// Not sure why the extra character is needed but it defintely lines up perfectly.
+		text(PApplet.nfs(leftPoints, 2) + " ", center - PADDING_FROM_CENTER, PADDING_FROM_TOP);
+		textAlign(LEFT);
+		text(PApplet.nfs(rightPoints, 2), center + PADDING_FROM_CENTER, PADDING_FROM_TOP);
 	}
 
 	public void drawStateWaiting() {
 		// TODO Draw welcome text
 		if (!leftPlayerConnected) {
+			textSize(24);
 			stroke(255);
 			fill(255);
+			textAlign(CENTER,CENTER);
 			text("Waiting for left player to join", screenWidth / 4,
 					screenHeight / 2);
 		}
 
 		if (!rightPlayerConnected) {
+			textSize(24);
 			stroke(255);
 			fill(255);
+			textAlign(CENTER,CENTER);
 			text("Waiting for right player to join", 3 * screenWidth / 4,
 					screenHeight / 2);
 		}
@@ -218,7 +245,8 @@ public class Pong extends ProcessingModule {
 	public void drawStateOver() {
 		int centerx = screenWidth / 2;
 		int centery = screenHeight / 2;
-		text(GAME_OVER, centerx - textWidth(GAME_OVER) / 2, centery);
+		textAlign(CENTER,CENTER);
+		text(GAME_OVER, centerx, centery);
 	}
 
 	public void initGame() {
@@ -237,8 +265,23 @@ public class Pong extends ProcessingModule {
 		gameState = State.STATE_PLAYING;
 	}
 	
+
+
+	public void bothPlayersConnectedEvent() {
+		switch (gameState) {
+		case STATE_PAUSED:
+			gameState = State.STATE_PLAYING;
+			break;
+		case STATE_GAME_START_WAITING:
+			initGame();
+			break;
+		default:
+			logger.error("Unexpected game state when both players are connected");
+		}
+	}
+
 	public void startRound() {
-		gameState = State.STATE_WAITING;
+		gameState = State.STATE_GAME_START_WAITING;
 		leftPlayerConnected = false;
 		rightPlayerConnected = false;
 	}
@@ -414,12 +457,32 @@ public class Pong extends ProcessingModule {
 	public boolean isRightPlayerConnected() {
 		return rightPlayerConnected;
 	}
+	
+	public boolean areBothPlayersConnected() {
+		return isLeftPlayerConnected() && isRightPlayerConnected();
+	}
 
 	public void leftPlayerConnected(boolean val) {
 		leftPlayerConnected = val;
+		if(val == false) {
+			playerDisconnectEvent();
+		}
 	}
 
 	public void rightPlayerConnected(boolean val) {
 		rightPlayerConnected = val;
+		if(val == false) {
+			playerDisconnectEvent();
+		}
+	}
+	
+	public void playerDisconnectEvent() {
+		switch(gameState) {
+		case STATE_PLAYING:
+			gameState = State.STATE_PAUSED;
+			break;
+		default:
+			// do nothing in other states
+		}
 	}
 }
