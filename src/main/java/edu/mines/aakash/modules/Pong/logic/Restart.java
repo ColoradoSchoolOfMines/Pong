@@ -13,7 +13,12 @@ public class Restart extends TimerTask {
 	
 	@Override
 	public void run() {
-		object.initGame();
+		if( object.isLeftPlayerConnected() && object.isRightPlayerConnected()) {
+			object.initGame();
+		} else {
+			object.exit();
+		}
+
 	}
 
 }

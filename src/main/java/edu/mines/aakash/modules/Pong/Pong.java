@@ -1,6 +1,7 @@
 package edu.mines.aakash.modules.Pong;
 
 import java.rmi.RemoteException;
+import java.util.Random;
 import java.util.Timer;
 
 import edu.mines.acmX.exhibit.input_services.hardware.*;
@@ -31,17 +32,21 @@ public class Pong extends ProcessingModule {
 	public static final String GAME_OVER = "Game Over";
 
 	public enum State {
-		STATE_WAITING, STATE_PLAYING, STATE_OVER
+		STATE_GAME_START_WAITING, STATE_PLAYING, STATE_PAUSED, STATE_OVER
 	}
 
 	public static final int POINTS_OVER = 5;
-	public static final boolean DEBUG_HANDS = true;
+	public static final boolean DEBUG_HANDS = false;
+	
+	public static final int BALL_VARIABILITY = 40;
 	
 	public static final int END_DELAY = 5000;
 
 	private State gameState;
 
 	private static Logger logger = LogManager.getLogger(Pong.class);
+	
+	Random rand;
 
 	// Game models
 	private Ball ball;
@@ -56,7 +61,7 @@ public class Pong extends ProcessingModule {
 	private boolean leftPlayerConnected = false;
 	private boolean rightPlayerConnected = false;
 
-	private int initialVelocityX;
+	private int totalVelocity;
 
 	// 0 - left, 1 - right
 	private int lastPoint;
@@ -68,6 +73,7 @@ public class Pong extends ProcessingModule {
 	private Timer timer;
 
 	public void setup() {
+		rand = new Random();
 		frameRate(30);
 		
 		startRound();
@@ -114,19 +120,27 @@ public class Pong extends ProcessingModule {
 		}
 
 		switch (gameState) {
-		case STATE_WAITING:
+		case STATE_GAME_START_WAITING:
 			// let the players see their movements
 			if (leftPlayerConnected) {
-				logger.debug("Left player connected");
 				leftPlayer.updatePaddlePosition();
 			}
 			if (rightPlayerConnected) {
-				logger.debug("Right player connected");
+				rightPlayer.updatePaddlePosition();
+			}
+			break;
+		case STATE_PAUSED:
+			// let the players see their movements
+			if (leftPlayerConnected) {
+				leftPlayer.updatePaddlePosition();
+			} 
+			if (rightPlayerConnected) {
+				
 				rightPlayer.updatePaddlePosition();
 			}
 			break;
 		case STATE_PLAYING:
-			// Update ball location
+
 			ball.update();
 
 			checkBallPosition();
@@ -136,7 +150,14 @@ public class Pong extends ProcessingModule {
 			rightPlayer.updatePaddlePosition();
 			break;
 		case STATE_OVER:
-			logger.info("Do nothing during state over");
+			// let the players see their movements
+			if (leftPlayerConnected) {
+				leftPlayer.updatePaddlePosition();
+			}
+			if (rightPlayerConnected) {
+				
+				rightPlayer.updatePaddlePosition();
+			} 
 			break;
 		default:
 			logger.error("Not a valid game state");
@@ -149,7 +170,10 @@ public class Pong extends ProcessingModule {
 		drawCommon();
 
 		switch (gameState) {
-		case STATE_WAITING:
+		case STATE_GAME_START_WAITING:
+			drawStateWaiting();
+			break;
+		case STATE_PAUSED:
 			drawStateWaiting();
 			break;
 		case STATE_PLAYING:
@@ -176,32 +200,45 @@ public class Pong extends ProcessingModule {
 		drawPaddle(leftPaddle);
 		drawPaddle(rightPaddle);
 
-		// draw ball
-		drawBall(ball);
+
 	}
 
 	public void drawStatePlaying() {
+		// draw ball
+		drawBall(ball);
 		// Draw score
+		final float PADDING_FROM_CENTER = 20;
+		final float PADDING_FROM_TOP = 64;
 		stroke(255);
 		fill(255);
 		int center = width / 2;
 		textSize(64);
-		text(PApplet.nfs(leftPoints, 2) + "", center - 64 * 2, 64);
-		text(PApplet.nfs(rightPoints, 2), center, 64);
+		textAlign(RIGHT);
+		// Not sure why the extra character is needed but it defintely lines up perfectly.
+		text(PApplet.nfs(leftPoints, 2) + " ", center - PADDING_FROM_CENTER, PADDING_FROM_TOP);
+		textAlign(LEFT);
+		text(PApplet.nfs(rightPoints, 2), center + PADDING_FROM_CENTER, PADDING_FROM_TOP);
 	}
 
 	public void drawStateWaiting() {
+		// draw ball
+		drawBall(ball);
 		// TODO Draw welcome text
+		textSize(18);
 		if (!leftPlayerConnected) {
+			textSize(24);
 			stroke(255);
 			fill(255);
+			textAlign(CENTER,CENTER);
 			text("Waiting for left player to join", width / 4,
 					height / 2);
 		}
 
-		if (!rightPlayerConnected) {
+		if (!rightPlayerConnected && leftPlayerConnected) {
+			textSize(24);
 			stroke(255);
 			fill(255);
+			textAlign(CENTER,CENTER);
 			text("Waiting for right player to join", 3 * width / 4,
 					height / 2);
 		}
@@ -210,7 +247,11 @@ public class Pong extends ProcessingModule {
 	public void drawStateOver() {
 		int centerx = width / 2;
 		int centery = height / 2;
-		text(GAME_OVER, centerx - textWidth(GAME_OVER) / 2, centery);
+
+		textSize(64);
+		textAlign(CENTER,CENTER);
+		text(GAME_OVER, centerx, centery);
+
 	}
 
 	public void initGame() {
@@ -218,19 +259,30 @@ public class Pong extends ProcessingModule {
 			timer.cancel();
 		}
 
-		// We want the ball to go across the screen in 2.5 seconds.
-		initialVelocityX = (int) (width / 2.5 / frameRate);
-		
-		ball.setInitialVelocity(initialVelocityX, 4);
-
+		resetBall();
 		lastPoint = 1;
 		leftPoints = rightPoints = 0;
 
 		gameState = State.STATE_PLAYING;
 	}
 	
+
+
+	public void bothPlayersConnectedEvent() {
+		switch (gameState) {
+		case STATE_PAUSED:
+			gameState = State.STATE_PLAYING;
+			break;
+		case STATE_GAME_START_WAITING:
+			initGame();
+			break;
+		default:
+			logger.error("Unexpected game state when both players are connected");
+		}
+	}
+
 	public void startRound() {
-		gameState = State.STATE_WAITING;
+		gameState = State.STATE_GAME_START_WAITING;
 		leftPlayerConnected = false;
 		rightPlayerConnected = false;
 	}
@@ -272,12 +324,35 @@ public class Pong extends ProcessingModule {
 		timer = new Timer();
 		timer.schedule(new Restart(object), END_DELAY);
 	}
+	
+	private double randWithinRange(double low, double high) {
+		return low + (Math.random() * (high - low));
+	}
+	
+	private double randWithinRangeWithOffset(double low, double high, double offset) {
+		double rand = randWithinRange(low, high);
+		if(rand < 0) {
+			return rand - offset;
+		} else {
+			return rand + offset;
+		}
+	}
+	
+	private double pythagOtherLeg(double c, double a) {
+		return Math.pow(Math.pow(c, 2) - Math.pow(a,2),0.5);
+	}
 
 	public void resetBall() {
+		// We want the ball to go across the screen in 2.5 seconds.
+		totalVelocity = (int) (width / 2.5 / frameRate);
+		logger.debug("Total v: " + totalVelocity);
+		double velocityY = randWithinRangeWithOffset(-totalVelocity/4.0, totalVelocity/4.0, totalVelocity/8.0);
+		double velocityX = pythagOtherLeg(totalVelocity, velocityY);
+		logger.debug("velocity: (" + velocityX + "," + velocityY +")");
 		ball.setX(width / 2);
 		ball.setY(height / 2);
 		int direction = lastPoint == 0 ? -1 : 1;
-		ball.setInitialVelocity(direction * initialVelocityX, 4);
+		ball.setInitialVelocity(direction * velocityX, velocityY);
 	}
 
 	public void checkBallPosition() {
@@ -323,39 +398,23 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void checkBallCollisionOnLeftPaddle() {
-		int ballX = ball.getX();
-		int ballY = ball.getY();
-
-		if (ballY > leftPaddle.getY()
-				&& ballY < (leftPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
-			if (Math.abs((ballX - leftPaddle.getX() - Paddle.PADDLE_WIDTH)) < Ball.BALL_RADIUS) {
-				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH
-						+ Ball.BALL_RADIUS);
-				// turn around and move to be outside the paddle
-				ball.reverseVelocityX();
-				ball.setX(leftPaddle.getX() + Paddle.PADDLE_WIDTH + ball.BALL_RADIUS);
-			}
+		if( ball.isIntersectedWith(leftPaddle)) {
+			ball.reverseVelocityX();
+			ball.setX((int)leftPaddle.getX() + Paddle.PADDLE_WIDTH + ball.BALL_RADIUS);
 		}
 	}
 
 	public void checkBallCollisionOnRightPaddle() {
-		int ballX = ball.getX();
-		int ballY = ball.getY();
-		if (ballY > rightPaddle.getY()
-				&& ballY < (rightPaddle.getY() + Paddle.PADDLE_HEIGHT)) {
-			if (Math.abs((ballX - rightPaddle.getX())) < Ball.BALL_RADIUS) {
-				ball.setX(rightPaddle.getX() - Ball.BALL_RADIUS);
-				// turn around and move to be outside the paddle
-				ball.reverseVelocityX();
-				ball.setX(rightPaddle.getX() - ball.BALL_RADIUS);
-			}
+		if( ball.isIntersectedWith(rightPaddle)) {
+			ball.reverseVelocityX();
+			ball.setX((int)rightPaddle.getX() - ball.BALL_RADIUS);
 		}
 	}
 
 	public void drawPaddle(Paddle paddle) {
 		stroke(255);
 		fill(255);
-		rect(paddle.getX(), paddle.getY(), Paddle.PADDLE_WIDTH,
+		rect((float)paddle.getX(), (float)paddle.getY(), Paddle.PADDLE_WIDTH,
 				Paddle.PADDLE_HEIGHT);
 	}
 
@@ -406,12 +465,32 @@ public class Pong extends ProcessingModule {
 	public boolean isRightPlayerConnected() {
 		return rightPlayerConnected;
 	}
+	
+	public boolean areBothPlayersConnected() {
+		return isLeftPlayerConnected() && isRightPlayerConnected();
+	}
 
 	public void leftPlayerConnected(boolean val) {
 		leftPlayerConnected = val;
+		if(val == false) {
+			playerDisconnectEvent();
+		}
 	}
 
 	public void rightPlayerConnected(boolean val) {
 		rightPlayerConnected = val;
+		if(val == false) {
+			playerDisconnectEvent();
+		}
+	}
+	
+	public void playerDisconnectEvent() {
+		switch(gameState) {
+		case STATE_PLAYING:
+			gameState = State.STATE_PAUSED;
+			break;
+		default:
+			// do nothing in other states
+		}
 	}
 }

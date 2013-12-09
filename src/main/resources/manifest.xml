@@ -2,7 +2,7 @@
 <manifest
     package="edu.mines.aakash.modules.Pong"
     class="Pong"
-    icon="icon.png"
+    icon="pong.png"
     title="Pong"
     author="Aakash Shah"
     version="0.0.1" >
