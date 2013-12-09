@@ -1,8 +1,10 @@
 package edu.mines.aakash.modules.Pong;
 
+import java.rmi.RemoteException;
 import java.util.Random;
 import java.util.Timer;
 
+import edu.mines.acmX.exhibit.input_services.hardware.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -14,10 +16,6 @@ import edu.mines.aakash.modules.Pong.players.KinectHumanPlayer;
 import edu.mines.aakash.modules.Pong.players.Player;
 import edu.mines.acmX.exhibit.input_services.events.EventManager;
 import edu.mines.acmX.exhibit.input_services.events.EventType;
-import edu.mines.acmX.exhibit.input_services.hardware.BadFunctionalityRequestException;
-import edu.mines.acmX.exhibit.input_services.hardware.HardwareManager;
-import edu.mines.acmX.exhibit.input_services.hardware.HardwareManagerManifestException;
-import edu.mines.acmX.exhibit.input_services.hardware.UnknownDriverRequest;
 import edu.mines.acmX.exhibit.input_services.hardware.devicedata.HandTrackerInterface;
 import edu.mines.acmX.exhibit.input_services.hardware.drivers.InvalidConfigurationFileException;
 import edu.mines.acmX.exhibit.module_management.modules.ProcessingModule;
@@ -77,25 +75,23 @@ public class Pong extends ProcessingModule {
 	public void setup() {
 		rand = new Random();
 		
-		size(screenWidth, screenHeight);
+		size(width, height);
 		frameRate(30);
 		
 		startRound();
 
 		// Create ball and paddle
-		ball = new Ball(screenWidth / 2, screenHeight / 2);
-		leftPaddle = new Paddle(0, (screenHeight - Paddle.PADDLE_HEIGHT) / 2);
-		rightPaddle = new Paddle(screenWidth - Paddle.PADDLE_WIDTH,
-				(screenHeight - Paddle.PADDLE_HEIGHT) / 2);
+		ball = new Ball(width / 2, height / 2);
+		leftPaddle = new Paddle(0, (height - Paddle.PADDLE_HEIGHT) / 2);
+		rightPaddle = new Paddle(width - Paddle.PADDLE_WIDTH,
+				(height - Paddle.PADDLE_HEIGHT) / 2);
 
 		// Register hand tracking
 		HardwareManager hm;
 		try {
-			hm = HardwareManager.getInstance();
 			receiver = new MyHandReceiver(this);
 			if (!DEBUG_HANDS) {
-				handDriver = (HandTrackerInterface) hm
-						.getInitialDriver("handtracking");
+				handDriver = (HandTrackerInterface) getInitialDriver("handtracking");
 
 				handDriver.registerHandCreated(receiver);
 				handDriver.registerHandUpdated(receiver);
@@ -107,21 +103,19 @@ public class Pong extends ProcessingModule {
 				em.registerReceiver(EventType.HAND_DESTROYED, receiver);
 				em.registerReceiver(EventType.HAND_UPDATED, receiver);
 			}
-		} catch (HardwareManagerManifestException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		} catch (BadFunctionalityRequestException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (UnknownDriverRequest e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (InvalidConfigurationFileException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		} catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (BadDeviceFunctionalityRequestException e) {
+            e.printStackTrace();
+        }
 
-	}
+    }
 
 	public void update() {
 		if (!DEBUG_HANDS) {
@@ -203,7 +197,7 @@ public class Pong extends ProcessingModule {
 
 		// draw middle line
 		stroke(255);
-		line(screenWidth / 2, 0, screenWidth / 2, screenHeight);
+		line(width / 2, 0, width / 2, height);
 
 		// draw paddle
 		drawPaddle(leftPaddle);
@@ -220,7 +214,7 @@ public class Pong extends ProcessingModule {
 		final float PADDING_FROM_TOP = 64;
 		stroke(255);
 		fill(255);
-		int center = screenWidth / 2;
+		int center = width / 2;
 		textSize(64);
 		textAlign(RIGHT);
 		// Not sure why the extra character is needed but it defintely lines up perfectly.
@@ -239,8 +233,8 @@ public class Pong extends ProcessingModule {
 			stroke(255);
 			fill(255);
 			textAlign(CENTER,CENTER);
-			text("Waiting for left player to join", screenWidth / 4,
-					screenHeight / 2);
+			text("Waiting for left player to join", width / 4,
+					height / 2);
 		}
 
 		if (!rightPlayerConnected && leftPlayerConnected) {
@@ -248,14 +242,14 @@ public class Pong extends ProcessingModule {
 			stroke(255);
 			fill(255);
 			textAlign(CENTER,CENTER);
-			text("Waiting for right player to join", 3 * screenWidth / 4,
-					screenHeight / 2);
+			text("Waiting for right player to join", 3 * width / 4,
+					height / 2);
 		}
 	}
 
 	public void drawStateOver() {
-		int centerx = screenWidth / 2;
-		int centery = screenHeight / 2;
+		int centerx = width / 2;
+		int centery = height / 2;
 
 		textSize(64);
 		textAlign(CENTER,CENTER);
@@ -353,13 +347,13 @@ public class Pong extends ProcessingModule {
 
 	public void resetBall() {
 		// We want the ball to go across the screen in 2.5 seconds.
-		totalVelocity = (int) (screenWidth / 2.5 / frameRate);
+		totalVelocity = (int) (width / 2.5 / frameRate);
 		logger.debug("Total v: " + totalVelocity);
 		double velocityY = randWithinRangeWithOffset(-totalVelocity/4.0, totalVelocity/4.0, totalVelocity/8.0);
 		double velocityX = pythagOtherLeg(totalVelocity, velocityY);
 		logger.debug("velocity: (" + velocityX + "," + velocityY +")");
-		ball.setX(screenWidth / 2);
-		ball.setY(screenHeight / 2);
+		ball.setX(width / 2);
+		ball.setY(height / 2);
 		int direction = lastPoint == 0 ? -1 : 1;
 		ball.setInitialVelocity(direction * velocityX, velocityY);
 	}
@@ -372,8 +366,8 @@ public class Pong extends ProcessingModule {
 		if (ballY < Ball.BALL_RADIUS) {
 			ball.setY(Ball.BALL_RADIUS);
 			ball.reverseVelocityY();
-		} else if (ballY > (screenHeight - Ball.BALL_RADIUS)) {
-			ball.setY(screenHeight - Ball.BALL_RADIUS);
+		} else if (ballY > (height - Ball.BALL_RADIUS)) {
+			ball.setY(height - Ball.BALL_RADIUS);
 			ball.reverseVelocityY();
 		}
 
@@ -389,7 +383,7 @@ public class Pong extends ProcessingModule {
 			rightPoints++;
 			lastPoint = 1;
 			pointScored = true;
-		} else if (ballX > screenWidth) {
+		} else if (ballX > width) {
 			// Player 1 scored a point
 			System.out.println("Player 1 scores a point");
 			lastPoint = 0;
