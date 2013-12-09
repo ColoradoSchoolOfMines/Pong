@@ -243,7 +243,7 @@ public class Pong extends ProcessingModule {
 					screenHeight / 2);
 		}
 
-		if (!rightPlayerConnected) {
+		if (!rightPlayerConnected && leftPlayerConnected) {
 			textSize(24);
 			stroke(255);
 			fill(255);
