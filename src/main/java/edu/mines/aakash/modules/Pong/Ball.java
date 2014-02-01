@@ -9,11 +9,24 @@ public class Ball {
 	private int y;
 	private double velX;
 	private double velY;
+	private boolean visible;
 	
 	public Ball(int x, int y) {
 		this.x = x;
 		this.y = y;
-		
+		visible = false;
+	}
+
+	public void setInvisible(){
+		visible = false;
+	}
+
+	public void setVisible(){
+		visible = true;
+	}
+
+	public boolean isVisible(){
+		return visible;
 	}
 	
 	public Rectangle2D getRectangleRepresentation() {

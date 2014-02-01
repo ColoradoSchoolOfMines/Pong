@@ -10,7 +10,7 @@ import org.apache.logging.log4j.Logger;
 
 import processing.core.PApplet;
 import edu.mines.aakash.modules.Pong.input.MyHandReceiver;
-import edu.mines.aakash.modules.Pong.logic.Restart;
+import edu.mines.aakash.modules.Pong.logic.*;
 import edu.mines.aakash.modules.Pong.players.HumanPlayer;
 import edu.mines.aakash.modules.Pong.players.KinectHumanPlayer;
 import edu.mines.aakash.modules.Pong.players.Player;
@@ -39,8 +39,10 @@ public class Pong extends ProcessingModule {
 	public static final boolean DEBUG_HANDS = false;
 	
 	public static final int BALL_VARIABILITY = 40;
-	
+
 	public static final int END_DELAY = 5000;
+	public static final int IDLE_DELAY = 30000;
+	public static final int RESET_DELAY = 500;
 
 	private State gameState;
 
@@ -71,6 +73,7 @@ public class Pong extends ProcessingModule {
 	private HandTrackerInterface handDriver;
 	private MyHandReceiver receiver;
 	private Timer timer;
+	private Timer idle;
 
 	public void setup() {
 		rand = new Random();
@@ -131,6 +134,13 @@ public class Pong extends ProcessingModule {
 			if (rightPlayerConnected) {
 				rightPlayer.updatePaddlePosition();
 			}
+
+			// nobody connected so lets start a timer to exit
+			if(!leftPlayerConnected && !rightPlayerConnected && timer == null){
+				idle = new Timer();
+				idle.schedule(new ExitTask(this), IDLE_DELAY);
+			}
+
 			break;
 		case STATE_PAUSED:
 			// let the players see their movements
@@ -138,11 +148,21 @@ public class Pong extends ProcessingModule {
 				leftPlayer.updatePaddlePosition();
 			} 
 			if (rightPlayerConnected) {
-				
 				rightPlayer.updatePaddlePosition();
 			}
+
+			// nobody connected so lets start a timer to exit
+			if(!leftPlayerConnected && !rightPlayerConnected && timer == null)   {
+				idle = new Timer();
+				idle.schedule(new ExitTask(this), IDLE_DELAY);
+			}
+
 			break;
 		case STATE_PLAYING:
+
+			if(idle != null)
+				idle.cancel();
+			idle = null;
 
 			ball.update();
 
@@ -301,6 +321,10 @@ public class Pong extends ProcessingModule {
 			return null;
 		}
 
+		if(idle != null)
+			idle.cancel();
+		idle = null;
+
 		if (!DEBUG_HANDS) {
 			return new KinectHumanPlayer(p, ball, height, receiver, handID,
 					handDriver.getHandTrackingHeight(), height, 1 / (float) 6);
@@ -356,6 +380,7 @@ public class Pong extends ProcessingModule {
 		ball.setY(height / 2);
 		int direction = lastPoint == 0 ? -1 : 1;
 		ball.setInitialVelocity(direction * velocityX, velocityY);
+		ball.setVisible();
 	}
 
 	public void checkBallPosition() {
@@ -395,7 +420,10 @@ public class Pong extends ProcessingModule {
 			if (leftPoints == POINTS_OVER || rightPoints == POINTS_OVER) {
 				endGame();
 			} else {
-				resetBall();
+				ball.setX(width / 2);
+				ball.setInitialVelocity(0, 0);
+				ball.setInvisible();
+				new Timer().schedule(new ResetTask(this), RESET_DELAY);
 			}
 		}
 	}
@@ -422,6 +450,9 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void drawBall(Ball ball) {
+		if(!ball.isVisible())
+			return;
+
 		int red = color(255, 0, 0);
 		stroke(red);
 		fill(red);
