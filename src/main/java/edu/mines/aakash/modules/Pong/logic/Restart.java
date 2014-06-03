@@ -16,7 +16,7 @@ public class Restart extends TimerTask {
 		if( object.isLeftPlayerConnected() && object.isRightPlayerConnected()) {
 			object.initGame();
 		} else {
-			object.exit();
+			object.destroy();
 		}
 
 	}
