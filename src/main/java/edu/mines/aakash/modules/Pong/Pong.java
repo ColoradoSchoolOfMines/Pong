@@ -493,4 +493,8 @@ public class Pong extends ProcessingModule {
 			// do nothing in other states
 		}
 	}
+
+	public HandTrackerInterface getDriver() {
+		return handDriver;
+	}
 }
