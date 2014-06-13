@@ -52,7 +52,7 @@ public class MyHandReceiver extends HandReceiver {
 		} else if (id == rightHandID) {
 			game.rightPlayerConnected(false);
 		}
-		// TODO check if we need to end game
+
 	}
 	
 	@Override
