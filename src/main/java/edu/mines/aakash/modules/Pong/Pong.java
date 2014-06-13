@@ -157,7 +157,14 @@ public class Pong extends ProcessingModule {
 			if (rightPlayerConnected) {
 				
 				rightPlayer.updatePaddlePosition();
-			} 
+			}
+			if(!leftPlayerConnected && !rightPlayerConnected) {
+				synchronized(timer) {
+					if(timer == null) {
+						launchTimer(this);
+					}
+				}
+			}
 			break;
 		default:
 			logger.error("Not a valid game state");
@@ -276,6 +283,9 @@ public class Pong extends ProcessingModule {
 		case STATE_GAME_START_WAITING:
 			initGame();
 			break;
+		case STATE_OVER:
+			initGame();
+			break;
 		default:
 			logger.error("Unexpected game state when both players are connected");
 		}
@@ -321,8 +331,10 @@ public class Pong extends ProcessingModule {
 	}
 	
 	private void launchTimer(Pong object) {
-		timer = new Timer();
-		timer.schedule(new Restart(object), END_DELAY);
+		synchronized(timer) {
+			timer = new Timer();
+			timer.schedule(new Restart(object), END_DELAY);
+		}
 	}
 	
 	private double randWithinRange(double low, double high) {
