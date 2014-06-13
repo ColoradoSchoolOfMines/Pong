@@ -19,7 +19,6 @@ public class Restart extends TimerTask {
 		} else {
 			object.getDriver().clearAllHands();
 			object.destroy();
-			System.out.println("destroy");
 		}
 	}
 
