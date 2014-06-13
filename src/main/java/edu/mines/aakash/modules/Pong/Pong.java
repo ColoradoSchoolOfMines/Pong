@@ -24,7 +24,7 @@ import edu.mines.acmX.exhibit.stdlib.graphics.HandPosition;
 
 /**
  * Hello world!
- * 
+ *
  */
 @SuppressWarnings("serial")
 public class Pong extends ProcessingModule {
@@ -37,15 +37,15 @@ public class Pong extends ProcessingModule {
 
 	public static final int POINTS_OVER = 5;
 	public static final boolean DEBUG_HANDS = false;
-	
+
 	public static final int BALL_VARIABILITY = 40;
-	
+
 	public static final int END_DELAY = 5000;
 
 	private State gameState;
 
 	private static Logger logger = LogManager.getLogger(Pong.class);
-	
+
 	Random rand;
 
 	// Game models
@@ -75,7 +75,7 @@ public class Pong extends ProcessingModule {
 	public void setup() {
 		rand = new Random();
 		frameRate(30);
-		
+
 		startRound();
 
 		// Create ball and paddle
@@ -107,12 +107,12 @@ public class Pong extends ProcessingModule {
 		} catch (InvalidConfigurationFileException e) {
 			e.printStackTrace();
 		} catch (RemoteException e) {
-            e.printStackTrace();
-        } catch (BadDeviceFunctionalityRequestException e) {
-            e.printStackTrace();
-        }
+			e.printStackTrace();
+		} catch (BadDeviceFunctionalityRequestException e) {
+			e.printStackTrace();
+		}
 
-    }
+	}
 
 	public void update() {
 		if (!DEBUG_HANDS) {
@@ -120,55 +120,53 @@ public class Pong extends ProcessingModule {
 		}
 
 		switch (gameState) {
-		case STATE_GAME_START_WAITING:
-			// let the players see their movements
-			if (leftPlayerConnected) {
-				leftPlayer.updatePaddlePosition();
-			}
-			if (rightPlayerConnected) {
-				rightPlayer.updatePaddlePosition();
-			}
-			break;
-		case STATE_PAUSED:
-			// let the players see their movements
-			if (leftPlayerConnected) {
-				leftPlayer.updatePaddlePosition();
-			} 
-			if (rightPlayerConnected) {
-				
-				rightPlayer.updatePaddlePosition();
-			}
-			break;
-		case STATE_PLAYING:
+			case STATE_GAME_START_WAITING:
+				// let the players see their movements
+				if (leftPlayerConnected) {
+					leftPlayer.updatePaddlePosition();
+				}
+				if (rightPlayerConnected) {
+					rightPlayer.updatePaddlePosition();
+				}
+				break;
+			case STATE_PAUSED:
+				// let the players see their movements
+				if (leftPlayerConnected) {
+					leftPlayer.updatePaddlePosition();
+				}
+				if (rightPlayerConnected) {
 
-			ball.update();
+					rightPlayer.updatePaddlePosition();
+				}
+				break;
+			case STATE_PLAYING:
 
-			checkBallPosition();
+				ball.update();
 
-			// Update player information
-			leftPlayer.updatePaddlePosition();
-			rightPlayer.updatePaddlePosition();
-			break;
-		case STATE_OVER:
-			// let the players see their movements
-			if (leftPlayerConnected) {
+				checkBallPosition();
+
+				// Update player information
 				leftPlayer.updatePaddlePosition();
-			}
-			if (rightPlayerConnected) {
-				
 				rightPlayer.updatePaddlePosition();
-			}
-			if(!leftPlayerConnected && !rightPlayerConnected) {
-				synchronized(timer) {
+				break;
+			case STATE_OVER:
+				// let the players see their movements
+				if (leftPlayerConnected) {
+					leftPlayer.updatePaddlePosition();
+				}
+				if (rightPlayerConnected) {
+
+					rightPlayer.updatePaddlePosition();
+				}
+				if(!leftPlayerConnected && !rightPlayerConnected) {
 					if(timer == null) {
 						launchTimer(this);
 					}
 				}
-			}
-			break;
-		default:
-			logger.error("Not a valid game state");
-			break;
+				break;
+			default:
+				logger.error("Not a valid game state");
+				break;
 		}
 
 	}
@@ -177,21 +175,21 @@ public class Pong extends ProcessingModule {
 		drawCommon();
 
 		switch (gameState) {
-		case STATE_GAME_START_WAITING:
-			drawStateWaiting();
-			break;
-		case STATE_PAUSED:
-			drawStateWaiting();
-			break;
-		case STATE_PLAYING:
-			drawStatePlaying();
-			break;
-		case STATE_OVER:
-			drawStateOver();
-			break;
-		default:
-			logger.error("Not a valid game state");
-			break;
+			case STATE_GAME_START_WAITING:
+				drawStateWaiting();
+				break;
+			case STATE_PAUSED:
+				drawStateWaiting();
+				break;
+			case STATE_PLAYING:
+				drawStatePlaying();
+				break;
+			case STATE_OVER:
+				drawStateOver();
+				break;
+			default:
+				logger.error("Not a valid game state");
+				break;
 		}
 	}
 
@@ -272,22 +270,22 @@ public class Pong extends ProcessingModule {
 
 		gameState = State.STATE_PLAYING;
 	}
-	
+
 
 
 	public void bothPlayersConnectedEvent() {
 		switch (gameState) {
-		case STATE_PAUSED:
-			gameState = State.STATE_PLAYING;
-			break;
-		case STATE_GAME_START_WAITING:
-			initGame();
-			break;
-		case STATE_OVER:
-			initGame();
-			break;
-		default:
-			logger.error("Unexpected game state when both players are connected");
+			case STATE_PAUSED:
+				gameState = State.STATE_PLAYING;
+				break;
+			case STATE_GAME_START_WAITING:
+				initGame();
+				break;
+			case STATE_OVER:
+				initGame();
+				break;
+			default:
+				logger.error("Unexpected game state when both players are connected");
 		}
 	}
 
@@ -329,18 +327,16 @@ public class Pong extends ProcessingModule {
 		drawStateOver();
 		launchTimer(this);
 	}
-	
+
 	private void launchTimer(Pong object) {
-		synchronized(timer) {
-			timer = new Timer();
-			timer.schedule(new Restart(object), END_DELAY);
-		}
+		timer = new Timer();
+		timer.schedule(new Restart(object), END_DELAY);
 	}
-	
+
 	private double randWithinRange(double low, double high) {
 		return low + (Math.random() * (high - low));
 	}
-	
+
 	private double randWithinRangeWithOffset(double low, double high, double offset) {
 		double rand = randWithinRange(low, high);
 		if(rand < 0) {
@@ -349,7 +345,7 @@ public class Pong extends ProcessingModule {
 			return rand + offset;
 		}
 	}
-	
+
 	private double pythagOtherLeg(double c, double a) {
 		return Math.pow(Math.pow(c, 2) - Math.pow(a,2),0.5);
 	}
@@ -456,7 +452,6 @@ public class Pong extends ProcessingModule {
 								type,
 								new HandPosition(2, new Coordinate3D(mouseX,
 										mouseY, 0)));
-
 			}
 		}
 	}
@@ -477,7 +472,7 @@ public class Pong extends ProcessingModule {
 	public boolean isRightPlayerConnected() {
 		return rightPlayerConnected;
 	}
-	
+
 	public boolean areBothPlayersConnected() {
 		return isLeftPlayerConnected() && isRightPlayerConnected();
 	}
@@ -495,14 +490,14 @@ public class Pong extends ProcessingModule {
 			playerDisconnectEvent();
 		}
 	}
-	
+
 	public void playerDisconnectEvent() {
 		switch(gameState) {
-		case STATE_PLAYING:
-			gameState = State.STATE_PAUSED;
-			break;
-		default:
-			// do nothing in other states
+			case STATE_PLAYING:
+				gameState = State.STATE_PAUSED;
+				break;
+			default:
+				// do nothing in other states
 		}
 	}
 
