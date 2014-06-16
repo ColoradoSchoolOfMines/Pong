@@ -2,7 +2,6 @@ package edu.mines.aakash.modules.Pong;
 
 import java.rmi.RemoteException;
 import java.util.Random;
-import java.util.Timer;
 
 import edu.mines.acmX.exhibit.input_services.hardware.*;
 import org.apache.logging.log4j.LogManager;
@@ -10,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 
 import processing.core.PApplet;
 import edu.mines.aakash.modules.Pong.input.MyHandReceiver;
-import edu.mines.aakash.modules.Pong.logic.Restart;
 import edu.mines.aakash.modules.Pong.players.HumanPlayer;
 import edu.mines.aakash.modules.Pong.players.KinectHumanPlayer;
 import edu.mines.aakash.modules.Pong.players.Player;
@@ -70,7 +68,8 @@ public class Pong extends ProcessingModule {
 
 	private HandTrackerInterface handDriver;
 	private MyHandReceiver receiver;
-	private Timer timer;
+	private int restart = -1;
+	//private Timer timer;
 
 	public void setup() {
 		rand = new Random();
@@ -135,7 +134,6 @@ public class Pong extends ProcessingModule {
 					leftPlayer.updatePaddlePosition();
 				}
 				if (rightPlayerConnected) {
-
 					rightPlayer.updatePaddlePosition();
 				}
 				break;
@@ -155,12 +153,18 @@ public class Pong extends ProcessingModule {
 					leftPlayer.updatePaddlePosition();
 				}
 				if (rightPlayerConnected) {
-
 					rightPlayer.updatePaddlePosition();
 				}
 				if(!leftPlayerConnected && !rightPlayerConnected) {
-					if(timer == null) {
-						launchTimer(this);
+					if(restart == -1) restart = millis();
+					if(millis() - restart > 5000) {
+						handDriver.clearAllHands();
+						destroy();
+					}
+				} else if(leftPlayerConnected && rightPlayerConnected) {
+					if(restart == -1) restart = millis();
+					if(millis() - restart > 5000) {
+						initGame();
 					}
 				}
 				break;
@@ -260,9 +264,7 @@ public class Pong extends ProcessingModule {
 	}
 
 	public void initGame() {
-		if (timer != null) {
-			timer.cancel();
-		}
+		restart = -1;
 
 		resetBall();
 		lastPoint = 1;
@@ -325,12 +327,7 @@ public class Pong extends ProcessingModule {
 	public void endGame() {
 		gameState = State.STATE_OVER;
 		drawStateOver();
-		launchTimer(this);
-	}
-
-	private void launchTimer(Pong object) {
-		timer = new Timer();
-		timer.schedule(new Restart(object), END_DELAY);
+		restart = millis();
 	}
 
 	private double randWithinRange(double low, double high) {
